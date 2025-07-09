@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Socket.IO Test</title>
+</head>
+<body>
+    <h1>Socket.IO Test Client</h1>
+    <input type="text" id="messageInput" placeholder="Escribe un mensaje" />
+    <button onclick="sendMessage()">Enviar Mensaje</button>
+    <h2>Logs:</h2>
+    <div id="logs"></div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+        // Reemplaza la IP si es necesario por la de tu computadora
+        const socket = io("http://192.168.8.167:3000");
+        const logs = document.getElementById('logs');
+
+        function log(message) {
+            logs.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${message}</p>`;
+        }
+
+        socket.on('connect', () => {
+            log('✅ Conectado al servidor!');
+        });
+
+        socket.on('disconnect', () => {
+            log('❌ Desconectado del servidor.');
+        });
+
+        // Escuchar el evento que definimos en el servidor
+        socket.on('messageToClient', (data) => {
+            log(`📩 Mensaje recibido del servidor: ${JSON.stringify(data)}`);
+        });
+        
+        // Escuchar el evento de notificación de permisos
+        socket.on('permisoNotification', (data) => {
+            log(`🔔 Notificación de Permiso: ${JSON.stringify(data.message)}`);
+        });
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value;
+            if (!message) return;
+
+            // Enviar un mensaje al evento 'messageToServer' que definimos en el gateway
+            socket.emit('messageToServer', { text: message });
+            log(` Escribiste: ${message}`);
+            input.value = '';
+        }
+    </script>
+</body>
+</html>

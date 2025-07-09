@@ -14,12 +14,17 @@ import { TipoPermiso } from '../tipos-permiso/entities/tipo-permiso.entity'; // 
 import { TiposPermisoModule } from '../tipos-permiso/tipos-permiso.module'; // <-- ¡IMPORTAR EL MÓDULO!
 // ===========================================
 
+// === IMPORTAR EL MÓDULO S3 ===
+import { S3Module } from '../s3/s3.module';
+// =============================
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Permiso, Trabajo, User, TipoPermiso]), // <-- ¡Asegúrate de que TipoPermiso esté aquí!
     EventsModule,
     TrabajosModule,
     TiposPermisoModule, // <-- ¡AGREGAR TiposPermisoModule a los imports!
+    S3Module, // <-- ¡AGREGAR S3Module a los imports!
   ],
   controllers: [PermisosController],
   providers: [PermisosService],

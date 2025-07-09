@@ -3,8 +3,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from 'src/users/users.service';
-import { User } from 'src/users/entities/user.entity';
+import { UsersService } from '../../users/users.service'; // Ruta corregida
+import { User } from '../../users/entities/user.entity'; // Ruta corregida
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -14,17 +14,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: configService.get<string>('JWT_SECRET')!, // Asegura que JWT_SECRET exista en .env
+      secretOrKey: configService.get<string>('JWT_SECRET')!,
       ignoreExpiration: false,
     });
   }
 
+  // === CORRECCIÓN CLAVE AQUÍ: Incluir 'areaId' en el tipo de 'payload' ===
   async validate(payload: {
     email: string;
-    sub: string;
+    sub: string; // ID del usuario
     rol: string;
     nombre?: string;
-  }): Promise<User> {
+    areaId?: string; // <-- ¡AÑADIR ESTO! Para que TypeScript lo reconozca
+  }): Promise<User> { // El objeto User ya incluye areaId
+    // Buscar al usuario por su ID (payload.sub)
+    // usersService.findOneById ya está configurado para popular la relación 'area'
     const user: User | null = await this.usersService.findOneById(payload.sub);
 
     if (!user) {
@@ -33,6 +37,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       );
     }
 
+    // El objeto 'user' retornado por validate es lo que se adjunta a 'req.user'.
+    // Como usersService.findOneById ya trae el User completo (con su areaId),
+    // req.user.areaId estará disponible en el controlador.
     return user;
   }
 }
+
+// Exportar el JwtAuthGuard
+import { AuthGuard } from '@nestjs/passport';
+
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {}

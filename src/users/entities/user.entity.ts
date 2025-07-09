@@ -3,57 +3,110 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  CreateDateColumn,
+  UpdateDateColumn,
   ManyToOne,
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { Trabajo } from '../../trabajos/entities/trabajo.entity';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Area } from '../../areas/entities/area.entity';
 import { Permiso } from '../../permisos/entities/permiso.entity';
-import { Area } from '../../areas/entities/area.entity'; // Importar la entidad Area
+import { Trabajo } from '../../trabajos/entities/trabajo.entity';
+import { Image } from '../../images/entities/image.entity';
 
 @Entity('users')
 export class User {
+  @ApiProperty({
+    description: 'ID único del usuario',
+    example: '8476471a-4c5c-4938-9f0f-7b8ac9242b4c',
+    format: 'uuid'
+  })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true, length: 255 })
-  email: string;
-
-  @Column({ length: 255 })
-  password: string;
-
-  @Column({ length: 100 })
+  @ApiProperty({
+    description: 'Nombre completo del usuario',
+    example: 'Carlos Técnico Centro',
+    minLength: 2,
+    maxLength: 100
+  })
+  @Column({ type: 'varchar', length: 100 })
   nombre: string;
 
-  @Column({ length: 50, default: 'tecnico' })
-  rol: string; // 'tecnico', 'supervisor', 'admin'
+  @ApiProperty({
+    description: 'Email único del usuario',
+    example: 'carlos.tecnico@example.com',
+    format: 'email'
+  })
+  @Column({ type: 'varchar', length: 255, unique: true })
+  email: string;
 
-  // === CORRECCIÓN CLAVE AQUÍ: Simplificar la definición de areaId ===
-  @ManyToOne(() => Area, (area) => area.users, { nullable: true })
-  @JoinColumn({ name: 'areaId' })
-  area: Area;
+  @ApiProperty({
+    description: 'Contraseña hasheada del usuario',
+    example: '$2b$10$hashedPasswordString',
+    writeOnly: true
+  })
+  @Column({ type: 'varchar', length: 255 })
+  password: string;
 
-  // Usar 'uuid' como tipo explícito y remover 'length'
-  @Column({ type: 'uuid', nullable: true }) // <-- ¡CORRECCIÓN!
-  areaId: string | null;
-  // ==========================================================
+  @ApiProperty({
+    description: 'Rol del usuario en el sistema',
+    enum: ['tecnico', 'supervisor', 'admin'],
+    example: 'tecnico'
+  })
+  @Column({
+    type: 'enum',
+    enum: ['tecnico', 'supervisor', 'admin'],
+    default: 'tecnico',
+  })
+  rol: 'tecnico' | 'supervisor' | 'admin';
 
-  @OneToMany(() => Trabajo, (trabajo) => trabajo.tecnicoAsignado)
-  trabajosAsignados: Trabajo[];
+  @ApiPropertyOptional({
+    description: 'ID del área a la que pertenece el usuario',
+    example: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
+    format: 'uuid',
+    nullable: true
+  })
+  @Column({ type: 'uuid', nullable: true })
+  areaId?: string;
 
-  @OneToMany(() => Permiso, (permiso) => permiso.tecnico)
-  permisosEnviados: Permiso[];
-
-  @OneToMany(() => Permiso, (permiso) => permiso.supervisor)
-  permisosRevisados: Permiso[];
-
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @ApiProperty({
+    description: 'Fecha y hora de creación del usuario',
+    example: '2025-01-15T10:30:00.000Z',
+    format: 'date-time'
+  })
+  @CreateDateColumn()
   createdAt: Date;
 
-  @Column({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
+  @ApiProperty({
+    description: 'Fecha y hora de la última actualización del usuario',
+    example: '2025-01-15T14:45:00.000Z',
+    format: 'date-time'
   })
+  @UpdateDateColumn()
   updatedAt: Date;
+
+  // Relaciones
+  @ApiPropertyOptional({
+    description: 'Área a la que pertenece el usuario',
+    type: () => Area
+  })
+  @ManyToOne(() => Area, (area) => area.users, { nullable: true })
+  @JoinColumn({ name: 'areaId' })
+  area?: Area;
+
+  @ApiPropertyOptional({
+    description: 'Permisos solicitados por el usuario (si es técnico)',
+    type: () => [Permiso]
+  })
+  @OneToMany(() => Permiso, (permiso) => permiso.tecnico)
+  permisos?: Permiso[];
+
+  @ApiPropertyOptional({
+    description: 'Imágenes subidas por el usuario',
+    type: () => [Image]
+  })
+  @OneToMany(() => Image, (image) => image.uploadedBy)
+  imagenesSubidas?: Image[];
 }

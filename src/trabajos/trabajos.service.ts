@@ -35,17 +35,20 @@ export class TrabajosService {
       fechaFinReal,
       estado,
       siguienteTipoPermiso,
-      ...trabajoData
+      titulo,
+      descripcion,
+      fechaProgramada,
+      comentarios,
     } = createTrabajoDto;
 
     const area = await this.areasRepository.findOneBy({ id: areaId });
     if (!area) throw new BadRequestException('Área no encontrada.');
 
-    let tecnicoAsignado: User | null = null;
+    let tecnicoAsignado: User | undefined = undefined;
     if (tecnicoAsignadoId) {
       tecnicoAsignado = await this.usersRepository.findOneBy({
         id: tecnicoAsignadoId,
-      });
+      }) || undefined;
       if (!tecnicoAsignado || tecnicoAsignado.rol !== 'tecnico') {
         throw new BadRequestException(
           'Técnico asignado no válido o rol incorrecto.',
@@ -54,17 +57,18 @@ export class TrabajosService {
     }
 
     const nuevoTrabajo = this.trabajosRepository.create({
-      ...trabajoData,
-      area: area, // Asigna el OBJETO Area
-      areaId: area.id, // Asigna la FK del Area
-      tecnicoAsignado: tecnicoAsignado, // Asigna el OBJETO User o null
-      tecnicoAsignadoId: tecnicoAsignadoId || null, // Asigna la FK del técnico o null
-      estado: estado || TrabajoEstado.ASIGNADO,
+      titulo,
+      descripcion,
+      areaId: area.id,
+      tecnicoAsignadoId: tecnicoAsignadoId || undefined,
+      estado: estado || TrabajoEstado.PENDIENTE,
       siguienteTipoPermiso: siguienteTipoPermiso || SecuenciaPermiso.ALTURA,
-      fechaInicioReal: fechaInicioReal ? new Date(fechaInicioReal) : null,
-      fechaFinReal: fechaFinReal ? new Date(fechaFinReal) : null,
-    });
-    return this.trabajosRepository.save(nuevoTrabajo);
+      fechaProgramada: fechaProgramada ? new Date(fechaProgramada) : undefined,
+      fechaInicioReal: fechaInicioReal ? new Date(fechaInicioReal) : undefined,
+      fechaFinReal: fechaFinReal ? new Date(fechaFinReal) : undefined,
+      comentarios,
+    } as Partial<Trabajo>);
+    return this.trabajosRepository.save(nuevoTrabajo as Trabajo);
   }
 
   async findAll(
@@ -152,8 +156,8 @@ export class TrabajosService {
     if (tecnicoAsignadoId !== undefined) {
       if (tecnicoAsignadoId === null) {
         // Si se envió null, desvincular
-        updatedTrabajo.tecnicoAsignado = null;
-        updatedTrabajo.tecnicoAsignadoId = null;
+        updatedTrabajo.tecnicoAsignado = undefined;
+        updatedTrabajo.tecnicoAsignadoId = undefined;
       } else {
         // Si se envió un ID, buscar y vincular
         const tecnico = await this.usersRepository.findOneBy({
@@ -177,20 +181,20 @@ export class TrabajosService {
     if (fechaInicioReal !== undefined) {
       updatedTrabajo.fechaInicioReal = fechaInicioReal
         ? new Date(fechaInicioReal)
-        : null;
+        : undefined;
     }
     if (fechaFinReal !== undefined) {
       updatedTrabajo.fechaFinReal = fechaFinReal
         ? new Date(fechaFinReal)
-        : null;
+        : undefined;
     }
 
     // 4. Asegurar que los enums se asignen correctamente
     if (estado !== undefined) {
-      updatedTrabajo.estado = estado;
+      updatedTrabajo.estado = estado as TrabajoEstado;
     }
     if (siguienteTipoPermiso !== undefined) {
-      updatedTrabajo.siguienteTipoPermiso = siguienteTipoPermiso;
+      updatedTrabajo.siguienteTipoPermiso = siguienteTipoPermiso as SecuenciaPermiso;
     }
 
     return this.trabajosRepository.save(updatedTrabajo);
