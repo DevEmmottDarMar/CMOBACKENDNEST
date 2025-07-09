@@ -7,8 +7,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WsAdapter } from '@nestjs/platform-ws'; // <-- ¡IMPORTAR WsAdapter!
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: false, // Deshabilitar el body parser por defecto
+  });
   const configService = app.get(ConfigService);
+
+  // Configurar Express para aceptar peticiones grandes ANTES de que NestJS configure el suyo
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.use(require('express').json({ limit: '50mb' }));
+  expressApp.use(require('express').urlencoded({ limit: '50mb', extended: true }));
 
   // === CONFIGURACIÓN DE SWAGGER ===
   const config = new DocumentBuilder()
@@ -79,13 +86,29 @@ async function bootstrap() {
 
   app.enableCors({
     origin: [
+      // Localhost para desarrollo
+      'http://localhost:3000',
+      'http://localhost:3001', 
+      'http://localhost:8080',
       /^http:\/\/localhost:\d+$/, // Para React Native Web
-      'http://192.168.1.23:3000', // Tu IP local actual para dispositivo físico
-      'http://172.31.249.65:3000', // IP anterior (mantener por compatibilidad)
+      // IPs específicas necesarias
       'http://10.0.2.2:3000',     // Para el emulador de Android
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
+  });
+
+  // Configurar límite de tamaño para peticiones (para subida de imágenes)
+  app.use((req, res, next) => {
+    res.setHeader('Content-Length', '50mb');
+    next();
+  });
+
+  // Configurar límite de tamaño para el body parser
+  app.use((req, res, next) => {
+    req.setTimeout(300000); // 5 minutos
+    res.setTimeout(300000); // 5 minutos
+    next();
   });
 
   app.useGlobalPipes(
