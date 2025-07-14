@@ -2,6 +2,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 // Importar TODAS las entidades
 import { User } from './users/entities/user.entity';
@@ -66,7 +68,7 @@ import { RolesModule } from './roles/roles.module'; // <-- ¡IMPORTAR RolesModul
     ImagesModule,
     RolesModule, // <-- ¡INCLUIR RolesModule en imports!
   ],
-  controllers: [],
-  providers: [],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
