@@ -123,9 +123,6 @@ async function bootstrap() {
         if (typeof allowedOrigin === 'string') {
           return allowedOrigin === origin;
         }
-        if (allowedOrigin instanceof RegExp) {
-          return allowedOrigin.test(origin);
-        }
         return false;
       });
       
