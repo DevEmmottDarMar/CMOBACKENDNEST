@@ -94,6 +94,7 @@ async function bootstrap() {
     'http://localhost:51745',   // Flutter web debug port
     'http://localhost:52589',   // Flutter web current port
     'http://localhost:52626',   // Flutter web debug port
+    'http://localhost:58865',   // Flutter web current port
     /^http:\/\/localhost:\d+$/, // Para cualquier puerto de localhost
     // IPs específicas necesarias
     'http://10.0.2.2:3000',     // Para el emulador de Android
