@@ -126,3 +126,4 @@ async function bootstrap() {
   console.log(`Swagger documentation is running on: ${await app.getUrl()}/api`);
 }
 bootstrap();// CORS configurado para Flutter web
+// Forzar redespliegue - Mon Jul 14 01:11:05 -04 2025
