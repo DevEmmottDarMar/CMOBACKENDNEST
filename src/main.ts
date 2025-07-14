@@ -84,8 +84,8 @@ async function bootstrap() {
   });
   // ================================
 
-  // Configuración de CORS más flexible para producción
-  const corsOrigins = configService.get<string>('CORS_ORIGIN')?.split(',') || [
+  // Configuración de CORS más específica para producción
+  const corsOrigins = [
     // Localhost para desarrollo
     'http://localhost:3000',
     'http://localhost:3001', 
@@ -95,26 +95,31 @@ async function bootstrap() {
     'http://localhost:52589',   // Flutter web current port
     'http://localhost:52626',   // Flutter web debug port
     'http://localhost:58865',   // Flutter web current port
-    /^http:\/\/localhost:\d+$/, // Para cualquier puerto de localhost
     // IPs específicas necesarias
     'http://10.0.2.2:3000',     // Para el emulador de Android
-    // Dominios de Railway para producción
+    // Dominios de Railway para producción - ESPECÍFICOS
     'https://cmowebfinal-production.up.railway.app',
-    /^https:\/\/.*\.up\.railway\.app$/, // Para cualquier subdominio de Railway
+    'https://cmowebfinal-production.up.railway.app/',
   ];
 
   app.enableCors({
     origin: (origin, callback) => {
+      console.log('CORS Origin request:', origin); // Debug log
+      
       // Permitir requests sin origin (como aplicaciones móviles)
-      if (!origin) return callback(null, true);
+      if (!origin) {
+        console.log('CORS: Allowing request without origin');
+        return callback(null, true);
+      }
       
       // Permitir cualquier puerto de localhost para desarrollo
       if (origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:')) {
+        console.log('CORS: Allowing localhost origin:', origin);
         return callback(null, true);
       }
       
       // Permitir orígenes específicos de la lista
-      if (corsOrigins.some(allowedOrigin => {
+      const isAllowed = corsOrigins.some(allowedOrigin => {
         if (typeof allowedOrigin === 'string') {
           return allowedOrigin === origin;
         }
@@ -122,16 +127,22 @@ async function bootstrap() {
           return allowedOrigin.test(origin);
         }
         return false;
-      })) {
+      });
+      
+      if (isAllowed) {
+        console.log('CORS: Allowing origin:', origin);
         return callback(null, true);
       }
       
       // Denegar otros orígenes
+      console.log('CORS: Denying origin:', origin);
       callback(new Error('Not allowed by CORS'));
     },
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
-    allowedHeaders: 'Content-Type,Authorization,X-Requested-With',
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
 
   // Configurar límite de tamaño para peticiones (para subida de imágenes)
