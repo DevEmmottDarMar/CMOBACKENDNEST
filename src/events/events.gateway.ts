@@ -30,7 +30,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     areaId: string | undefined,
     nombre: string,
     email: string,
-    area?: { id: number, nombre: string }
+    area?: { id: string, nombre: string }
   }> = new Map();
 
   constructor(
