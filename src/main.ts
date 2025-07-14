@@ -90,7 +90,9 @@ async function bootstrap() {
     'http://localhost:3000',
     'http://localhost:3001', 
     'http://localhost:8080',
-    /^http:\/\/localhost:\d+$/, // Para React Native Web
+    'http://localhost:51698',   // Flutter web default port
+    'http://localhost:51745',   // Flutter web debug port
+    /^http:\/\/localhost:\d+$/, // Para cualquier puerto de localhost
     // IPs específicas necesarias
     'http://10.0.2.2:3000',     // Para el emulador de Android
   ];

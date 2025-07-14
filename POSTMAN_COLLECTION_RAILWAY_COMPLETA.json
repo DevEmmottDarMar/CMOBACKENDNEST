@@ -1,0 +1,1116 @@
+{
+  "info": {
+    "name": "CMO Backend Railway - API Completa",
+    "description": "Colección completa para el sistema CMO desplegado en Railway con todos los endpoints: autenticación, usuarios, trabajos, permisos, áreas, roles, tipos de permiso, imágenes y S3",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://cmobackendnest-production.up.railway.app",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trabajo_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "permiso_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "area_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tecnico_id",
+      "value": "30e8713d-6f23-4b09-8c06-e948e20ccf16",
+      "type": "string"
+    },
+    {
+      "key": "supervisor_id",
+      "value": "5d125333-0f21-4cc6-8b25-117c85db9de6",
+      "type": "string"
+    },
+    {
+      "key": "planificador_id",
+      "value": "431ae311-a0b8-4889-a5ad-670b1491d394",
+      "type": "string"
+    },
+    {
+      "key": "admin_id",
+      "value": "bfc6a366-1e65-474e-a8f5-5f673631a536",
+      "type": "string"
+    },
+    {
+      "key": "tipo_permiso_altura",
+      "value": "45f2674e-efdd-4e71-b727-6c6cbc4ed3eb",
+      "type": "string"
+    },
+    {
+      "key": "tipo_permiso_enganche",
+      "value": "6e680ae5-97d6-4944-86a1-7d2e5c36d05e",
+      "type": "string"
+    },
+    {
+      "key": "tipo_permiso_cierre",
+      "value": "f4d943b0-82c2-4a81-abeb-64bf6fca1ddd",
+      "type": "string"
+    },
+    {
+      "key": "area_centro_id",
+      "value": "11873221-e21e-4a10-8d6f-2cd86df5e581",
+      "type": "string"
+    },
+    {
+      "key": "area_sur_id",
+      "value": "70ddbbf7-1c1f-4083-a578-ad8059960ad4",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Autenticación",
+      "item": [
+        {
+          "name": "Login - Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.access_token);",
+                  "    pm.collectionVariables.set('user_id', response.user.id);",
+                  "    console.log('Token guardado:', response.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login - Técnico",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"tecnico1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Supervisor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"supervisor1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login - Planificador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"planificador1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Usuarios",
+      "item": [
+        {
+          "name": "Obtener Todos los Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Usuario por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Usuarios por Área",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/area/{{area_centro_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "area", "{{area_centro_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Crear Nuevo Usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Nuevo Técnico\",\n  \"email\": \"nuevo.tecnico@demo.com\",\n  \"password\": \"123456\",\n  \"roleId\": \"ad5093ab-aa0d-4429-a1e1-975dc04d087e\",\n  \"areaId\": \"{{area_centro_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Usuario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Técnico Actualizado\",\n  \"email\": \"tecnico.actualizado@demo.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏗️ Trabajos",
+      "item": [
+        {
+          "name": "Obtener Todos los Trabajos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trabajos",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Trabajo por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trabajos/{{trabajo_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos", "{{trabajo_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Crear Nuevo Trabajo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Mantenimiento Sistema Eléctrico\",\n  \"descripcion\": \"Revisión y mantenimiento del sistema eléctrico del edificio principal\",\n  \"areaId\": \"{{area_centro_id}}\",\n  \"tecnicoId\": \"{{tecnico_id}}\",\n  \"fechaInicio\": \"2025-07-15T08:00:00.000Z\",\n  \"fechaFin\": \"2025-07-15T17:00:00.000Z\",\n  \"prioridad\": \"alta\",\n  \"estado\": \"pendiente\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/trabajos",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Trabajo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"en_progreso\",\n  \"descripcion\": \"Trabajo actualizado con nueva información\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/trabajos/{{trabajo_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos", "{{trabajo_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Trabajo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trabajos/{{trabajo_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos", "{{trabajo_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Permisos",
+      "item": [
+        {
+          "name": "Obtener Todos los Permisos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/permisos",
+              "host": ["{{base_url}}"],
+              "path": ["permisos"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Permiso por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/permisos/{{permiso_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "{{permiso_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Permisos Pendientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/permisos/pendientes",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "pendientes"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Permisos por Técnico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/permisos/tecnico/{{tecnico_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "tecnico", "{{tecnico_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Permisos por Trabajo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/permisos/by-trabajo/{{trabajo_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "by-trabajo", "{{trabajo_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Crear Nuevo Permiso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trabajoId\": \"{{trabajo_id}}\",\n  \"tecnicoId\": \"{{tecnico_id}}\",\n  \"tipoPermisoId\": \"{{tipo_permiso_altura}}\",\n  \"descripcion\": \"Permiso para trabajo en altura en el sistema eléctrico\",\n  \"fechaInicio\": \"2025-07-15T08:00:00.000Z\",\n  \"fechaFin\": \"2025-07-15T17:00:00.000Z\",\n  \"equiposNecesarios\": [\"arnés\", \"casco\", \"guantes\"],\n  \"medidasSeguridad\": [\"revisión de equipos\", \"supervisión constante\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos",
+              "host": ["{{base_url}}"],
+              "path": ["permisos"]
+            }
+          }
+        },
+        {
+          "name": "Autorizar Permiso",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"autorizado\",\n  \"comentarios\": \"Permiso autorizado por supervisor\",\n  \"supervisorId\": \"{{supervisor_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos/{{permiso_id}}/authorize",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "{{permiso_id}}", "authorize"]
+            }
+          }
+        },
+        {
+          "name": "Subir Imagen a Permiso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "permisoId",
+                  "value": "{{permiso_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "descripcion",
+                  "value": "Imagen del trabajo realizado",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos/upload-image",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "upload-image"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Permiso",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/permisos/{{permiso_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "{{permiso_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏢 Áreas",
+      "item": [
+        {
+          "name": "Obtener Todas las Áreas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/areas",
+              "host": ["{{base_url}}"],
+              "path": ["areas"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Área por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/areas/{{area_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["areas", "{{area_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Crear Nueva Área",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"CYR NORTE\",\n  \"descripcion\": \"Area Norte de la ciudad\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/areas",
+              "host": ["{{base_url}}"],
+              "path": ["areas"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Área",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"CYR NORTE ACTUALIZADO\",\n  \"descripcion\": \"Area Norte actualizada con nueva información\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/areas/{{area_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["areas", "{{area_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Área",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/areas/{{area_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["areas", "{{area_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎭 Roles",
+      "item": [
+        {
+          "name": "Obtener Todos los Roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["roles"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Rol por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/roles/{{role_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["roles", "{{role_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Rol por Nombre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/roles/by-name/admin",
+              "host": ["{{base_url}}"],
+              "path": ["roles", "by-name", "admin"]
+            }
+          }
+        },
+        {
+          "name": "Crear Nuevo Rol",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"operador\",\n  \"descripcion\": \"Operador con permisos limitados\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["roles"]
+            }
+          }
+        },
+        {
+          "name": "Crear Roles por Defecto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url}}/roles/create-default",
+              "host": ["{{base_url}}"],
+              "path": ["roles", "create-default"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Rol",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"operador_actualizado\",\n  \"descripcion\": \"Operador con permisos actualizados\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/roles/{{role_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["roles", "{{role_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Rol",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/roles/{{role_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["roles", "{{role_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📝 Tipos de Permiso",
+      "item": [
+        {
+          "name": "Obtener Todos los Tipos de Permiso",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tipos-permiso",
+              "host": ["{{base_url}}"],
+              "path": ["tipos-permiso"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Tipo de Permiso por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tipos-permiso/{{tipo_permiso_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tipos-permiso", "{{tipo_permiso_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Crear Nuevo Tipo de Permiso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Trabajo en Espacios Confinados\",\n  \"descripcion\": \"Permiso para trabajos en espacios confinados\",\n  \"requisitos\": [\"certificación\", \"equipos especiales\", \"supervisión\"],\n  \"equiposNecesarios\": [\"detector de gases\", \"ventilador\", \"arnés\"],\n  \"medidasSeguridad\": [\"ventilación\", \"monitoreo continuo\", \"comunicación\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tipos-permiso",
+              "host": ["{{base_url}}"],
+              "path": ["tipos-permiso"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Tipo de Permiso",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Trabajo en Espacios Confinados Actualizado\",\n  \"descripcion\": \"Permiso actualizado para trabajos en espacios confinados\",\n  \"requisitos\": [\"certificación actualizada\", \"equipos especiales\", \"supervisión continua\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tipos-permiso/{{tipo_permiso_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tipos-permiso", "{{tipo_permiso_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Tipo de Permiso",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tipos-permiso/{{tipo_permiso_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["tipos-permiso", "{{tipo_permiso_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🖼️ Imágenes",
+      "item": [
+        {
+          "name": "Obtener Todas las Imágenes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/images",
+              "host": ["{{base_url}}"],
+              "path": ["images"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Imagen por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/images/{{image_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["images", "{{image_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Imágenes por Usuario",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/images/by-user/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["images", "by-user", "{{user_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Imágenes por Permiso",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/images/by-permiso/{{permiso_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["images", "by-permiso", "{{permiso_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Imágenes por Trabajo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/images/by-trabajo/{{trabajo_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["images", "by-trabajo", "{{trabajo_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener URL Firmada de Imagen",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/images/{{image_id}}/signed-url",
+              "host": ["{{base_url}}"],
+              "path": ["images", "{{image_id}}", "signed-url"]
+            }
+          }
+        },
+        {
+          "name": "Subir Imagen",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "descripcion",
+                  "value": "Imagen de prueba",
+                  "type": "text"
+                },
+                {
+                  "key": "userId",
+                  "value": "{{user_id}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/images/upload",
+              "host": ["{{base_url}}"],
+              "path": ["images", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Subir Imagen Base64",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"base64Data\": \"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...\",\n  \"fileName\": \"imagen.jpg\",\n  \"descripcion\": \"Imagen en base64\",\n  \"userId\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/images/upload-base64",
+              "host": ["{{base_url}}"],
+              "path": ["images", "upload-base64"]
+            }
+          }
+        },
+        {
+          "name": "Crear Imagen",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://ejemplo.com/imagen.jpg\",\n  \"descripcion\": \"Imagen de ejemplo\",\n  \"userId\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/images",
+              "host": ["{{base_url}}"],
+              "path": ["images"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Imagen",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descripcion\": \"Imagen actualizada\",\n  \"url\": \"https://ejemplo.com/imagen-actualizada.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/images/{{image_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["images", "{{image_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Imagen",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/images/{{image_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["images", "{{image_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "☁️ S3",
+      "item": [
+        {
+          "name": "Subir Archivo a S3",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "folder",
+                  "value": "permisos",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/s3/upload",
+              "host": ["{{base_url}}"],
+              "path": ["s3", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Subir Base64 a S3",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"base64Data\": \"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...\",\n  \"fileName\": \"documento.pdf\",\n  \"folder\": \"documentos\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/s3/upload-base64",
+              "host": ["{{base_url}}"],
+              "path": ["s3", "upload-base64"]
+            }
+          }
+        },
+        {
+          "name": "Descargar Archivo de S3",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/s3/download/{{s3_key}}",
+              "host": ["{{base_url}}"],
+              "path": ["s3", "download", "{{s3_key}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Archivo de S3",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/s3/{{s3_key}}",
+              "host": ["{{base_url}}"],
+              "path": ["s3", "{{s3_key}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔍 Health Check",
+      "item": [
+        {
+          "name": "Health Check API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api",
+              "host": ["{{base_url}}"],
+              "path": ["api"]
+            }
+          }
+        },
+        {
+          "name": "Health Check Simple",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+} 
