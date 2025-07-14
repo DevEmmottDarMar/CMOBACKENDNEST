@@ -23,7 +23,15 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   private logger: Logger = new Logger('EventsGateway');
   // Mapa para mantener info extendida de los clientes conectados
-  private clients: Map<string, { ws: WebSocket, userId: string, rol: string, areaId: string | undefined }> = new Map();
+  private clients: Map<string, { 
+    ws: WebSocket, 
+    userId: string, 
+    rol: string, 
+    areaId: string | undefined,
+    nombre: string,
+    email: string,
+    area?: { id: number, nombre: string }
+  }> = new Map();
 
   constructor(
     private readonly jwtService: JwtService,
@@ -78,7 +86,15 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           // 🔍 Paso 4: Registrar cliente
           const clientId = request.headers['sec-websocket-key'] || Date.now().toString();
           const userRole = user.role?.nombre || 'sin_rol';
-          this.clients.set(clientId, { ws, userId: user.id, rol: userRole, areaId: user.areaId });
+          this.clients.set(clientId, { 
+            ws, 
+            userId: user.id, 
+            rol: userRole, 
+            areaId: user.areaId,
+            nombre: user.nombre,
+            email: user.email,
+            area: user.area ? { id: user.area.id, nombre: user.area.nombre } : undefined
+          });
           
           this.logger.log(`🎉 Cliente autenticado exitosamente: ${user.nombre} (${userRole})`);
           
@@ -95,6 +111,9 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           }));
 
           this.emitConnectedUsers();
+          
+          // Notificar a todos los clientes sobre el nuevo usuario conectado
+          this.notifyUserConnected(user, userRole);
 
           ws.on('close', () => {
             this.clients.delete(clientId);
@@ -150,9 +169,13 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
    */
   emitConnectedUsers() {
     const users = Array.from(this.clients.values()).map(info => ({
+      id: info.userId,
       userId: info.userId,
+      nombre: info.nombre,
+      email: info.email,
       rol: info.rol,
-      areaId: info.areaId
+      areaId: info.areaId,
+      area: info.area
     }));
 
     this.logger.log(`👥 Emitiendo lista de usuarios conectados: ${users.length} usuarios`);
@@ -201,6 +224,31 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           message: message,
           permiso: permiso,
           type: type
+        }));
+      }
+    });
+  }
+
+  /**
+   * Notifica a todos los clientes cuando un nuevo usuario se conecta.
+   * @param user El usuario que se acaba de conectar.
+   * @param userRole El rol del usuario.
+   */
+  notifyUserConnected(user: User, userRole: string) {
+    this.logger.log(`🔔 Notificando conexión de nuevo usuario: ${user.nombre} (${userRole})`);
+
+    this.clients.forEach((info) => {
+      if (info.ws.readyState === WebSocket.OPEN) {
+        info.ws.send(JSON.stringify({
+          event: 'userConnected',
+          message: `${user.nombre} se ha conectado como ${userRole}`,
+          user: {
+            id: user.id,
+            nombre: user.nombre,
+            email: user.email,
+            rol: userRole,
+            area: user.area?.nombre
+          }
         }));
       }
     });
