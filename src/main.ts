@@ -84,57 +84,9 @@ async function bootstrap() {
   });
   // ================================
 
-  // Configuración de CORS más específica para producción
-  const corsOrigins = [
-    // Localhost para desarrollo
-    'http://localhost:3000',
-    'http://localhost:3001', 
-    'http://localhost:8080',
-    'http://localhost:51698',   // Flutter web default port
-    'http://localhost:51745',   // Flutter web debug port
-    'http://localhost:52589',   // Flutter web current port
-    'http://localhost:52626',   // Flutter web debug port
-    'http://localhost:58865',   // Flutter web current port
-    // IPs específicas necesarias
-    'http://10.0.2.2:3000',     // Para el emulador de Android
-    // Dominios de Railway para producción - ESPECÍFICOS
-    'https://cmowebfinal-production.up.railway.app',
-    'https://cmowebfinal-production.up.railway.app/',
-  ];
-
+  // Configuración CORS simplificada y robusta
   app.enableCors({
-    origin: (origin, callback) => {
-      console.log('CORS Origin request:', origin); // Debug log
-      
-      // Permitir requests sin origin (como aplicaciones móviles)
-      if (!origin) {
-        console.log('CORS: Allowing request without origin');
-        return callback(null, true);
-      }
-      
-      // Permitir cualquier puerto de localhost para desarrollo
-      if (origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:')) {
-        console.log('CORS: Allowing localhost origin:', origin);
-        return callback(null, true);
-      }
-      
-      // Permitir orígenes específicos de la lista
-      const isAllowed = corsOrigins.some(allowedOrigin => {
-        if (typeof allowedOrigin === 'string') {
-          return allowedOrigin === origin;
-        }
-        return false;
-      });
-      
-      if (isAllowed) {
-        console.log('CORS: Allowing origin:', origin);
-        return callback(null, true);
-      }
-      
-      // Denegar otros orígenes
-      console.log('CORS: Denying origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    },
+    origin: true, // Permitir todos los orígenes temporalmente
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
