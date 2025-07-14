@@ -29,32 +29,32 @@ export class TrabajosController {
   constructor(private readonly trabajosService: TrabajosService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard) // Temporalmente público para configuración inicial
+  // @ApiBearerAuth()
   @ApiOperation({
     summary: 'Crear un nuevo trabajo',
-    description: 'Crea un nuevo trabajo en el sistema'
+    description: 'Crea un nuevo trabajo en el sistema',
   })
   @ApiBody({
     type: CreateTrabajoDto,
-    description: 'Datos del trabajo a crear'
+    description: 'Datos del trabajo a crear',
   })
   @ApiResponse({
     status: 201,
     description: 'Trabajo creado exitosamente',
-    type: Trabajo
+    type: Trabajo,
   })
   @ApiResponse({
     status: 400,
-    description: 'Datos inválidos proporcionados'
+    description: 'Datos inválidos proporcionados',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autorizado - Token JWT requerido'
+    description: 'No autorizado - Token JWT requerido',
   })
   @ApiResponse({
     status: 404,
-    description: 'Área no encontrada'
+    description: 'Área no encontrada',
   })
   create(@Body() createTrabajoDto: CreateTrabajoDto) {
     return this.trabajosService.create(createTrabajoDto);
@@ -65,16 +65,16 @@ export class TrabajosController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Obtener todos los trabajos',
-    description: 'Retorna una lista de todos los trabajos del sistema'
+    description: 'Retorna una lista de todos los trabajos del sistema',
   })
   @ApiResponse({
     status: 200,
     description: 'Lista de trabajos obtenida exitosamente',
-    type: [Trabajo]
+    type: [Trabajo],
   })
   @ApiResponse({
     status: 401,
-    description: 'No autorizado - Token JWT requerido'
+    description: 'No autorizado - Token JWT requerido',
   })
   findAll() {
     return this.trabajosService.findAll();
@@ -85,26 +85,26 @@ export class TrabajosController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Obtener un trabajo por ID',
-    description: 'Retorna los datos de un trabajo específico por su ID'
+    description: 'Retorna los datos de un trabajo específico por su ID',
   })
   @ApiParam({
     name: 'id',
     description: 'ID único del trabajo',
     example: 'e1d68650-a7c2-435e-9623-7e4249e8f00e',
-    format: 'uuid'
+    format: 'uuid',
   })
   @ApiResponse({
     status: 200,
     description: 'Trabajo encontrado exitosamente',
-    type: Trabajo
+    type: Trabajo,
   })
   @ApiResponse({
     status: 401,
-    description: 'No autorizado - Token JWT requerido'
+    description: 'No autorizado - Token JWT requerido',
   })
   @ApiResponse({
     status: 404,
-    description: 'Trabajo no encontrado'
+    description: 'Trabajo no encontrado',
   })
   findOne(@Param('id') id: string) {
     return this.trabajosService.findOne(id);
@@ -115,34 +115,34 @@ export class TrabajosController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Actualizar un trabajo',
-    description: 'Actualiza los datos de un trabajo existente'
+    description: 'Actualiza los datos de un trabajo existente',
   })
   @ApiParam({
     name: 'id',
     description: 'ID único del trabajo a actualizar',
     example: 'e1d68650-a7c2-435e-9623-7e4249e8f00e',
-    format: 'uuid'
+    format: 'uuid',
   })
   @ApiBody({
     type: UpdateTrabajoDto,
-    description: 'Datos a actualizar del trabajo'
+    description: 'Datos a actualizar del trabajo',
   })
   @ApiResponse({
     status: 200,
     description: 'Trabajo actualizado exitosamente',
-    type: Trabajo
+    type: Trabajo,
   })
   @ApiResponse({
     status: 400,
-    description: 'Datos inválidos proporcionados'
+    description: 'Datos inválidos proporcionados',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autorizado - Token JWT requerido'
+    description: 'No autorizado - Token JWT requerido',
   })
   @ApiResponse({
     status: 404,
-    description: 'Trabajo no encontrado'
+    description: 'Trabajo no encontrado',
   })
   update(@Param('id') id: string, @Body() updateTrabajoDto: UpdateTrabajoDto) {
     return this.trabajosService.update(id, updateTrabajoDto);
@@ -153,25 +153,25 @@ export class TrabajosController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Eliminar un trabajo',
-    description: 'Elimina un trabajo del sistema'
+    description: 'Elimina un trabajo del sistema',
   })
   @ApiParam({
     name: 'id',
     description: 'ID único del trabajo a eliminar',
     example: 'e1d68650-a7c2-435e-9623-7e4249e8f00e',
-    format: 'uuid'
+    format: 'uuid',
   })
   @ApiResponse({
     status: 200,
-    description: 'Trabajo eliminado exitosamente'
+    description: 'Trabajo eliminado exitosamente',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autorizado - Token JWT requerido'
+    description: 'No autorizado - Token JWT requerido',
   })
   @ApiResponse({
     status: 404,
-    description: 'Trabajo no encontrado'
+    description: 'Trabajo no encontrado',
   })
   remove(@Param('id') id: string) {
     return this.trabajosService.remove(id);

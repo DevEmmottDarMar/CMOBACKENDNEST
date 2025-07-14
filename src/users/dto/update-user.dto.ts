@@ -27,11 +27,11 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   password?: string;
 
   @ApiPropertyOptional({
-    description: 'Rol del usuario en el sistema',
-    enum: ['tecnico', 'supervisor', 'admin'],
-    example: 'supervisor'
+    description: 'ID del rol del usuario',
+    example: '8476471a-4c5c-4938-9f0f-7b8ac9242b4c',
+    format: 'uuid'
   })
-  rol?: 'tecnico' | 'supervisor' | 'admin';
+  roleId?: string;
 
   @ApiPropertyOptional({
     description: 'ID del área a la que pertenece el usuario',

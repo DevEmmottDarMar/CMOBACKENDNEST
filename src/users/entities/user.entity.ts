@@ -14,6 +14,7 @@ import { Area } from '../../areas/entities/area.entity';
 import { Permiso } from '../../permisos/entities/permiso.entity';
 import { Trabajo } from '../../trabajos/entities/trabajo.entity';
 import { Image } from '../../images/entities/image.entity';
+import { Role } from '../../roles/entities/role.entity';
 
 @Entity('users')
 export class User {
@@ -51,16 +52,12 @@ export class User {
   password: string;
 
   @ApiProperty({
-    description: 'Rol del usuario en el sistema',
-    enum: ['tecnico', 'supervisor', 'admin'],
-    example: 'tecnico'
+    description: 'ID del rol del usuario',
+    example: '8476471a-4c5c-4938-9f0f-7b8ac9242b4c',
+    format: 'uuid'
   })
-  @Column({
-    type: 'enum',
-    enum: ['tecnico', 'supervisor', 'admin'],
-    default: 'tecnico',
-  })
-  rol: 'tecnico' | 'supervisor' | 'admin';
+  @Column({ type: 'uuid' })
+  roleId: string;
 
   @ApiPropertyOptional({
     description: 'ID del área a la que pertenece el usuario',
@@ -88,6 +85,14 @@ export class User {
   updatedAt: Date;
 
   // Relaciones
+  @ApiPropertyOptional({
+    description: 'Rol del usuario',
+    type: () => Role
+  })
+  @ManyToOne(() => Role, (role) => role.users)
+  @JoinColumn({ name: 'roleId' })
+  role?: Role;
+
   @ApiPropertyOptional({
     description: 'Área a la que pertenece el usuario',
     type: () => Area

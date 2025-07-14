@@ -1,0 +1,1177 @@
+{
+  "info": {
+    "name": "CMO Permisos Backend - Colección Completa",
+    "description": "Colección completa con todos los endpoints del sistema de permisos CMO",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "planificador_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "planificador_nombre",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "nuevo_trabajo_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "nuevo_trabajo_titulo",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "trabajo_centro_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "area_centro_id",
+      "value": "11873221-e21e-4a10-8d6f-2cd86df5e581",
+      "type": "string"
+    },
+    {
+      "key": "area_sur_id",
+      "value": "70ddbbf7-1c1f-4083-a578-ad8059960ad4",
+      "type": "string"
+    },
+    {
+      "key": "tecnico_id",
+      "value": "30e8713d-6f23-4b09-8c06-e948e20ccf16",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Autenticación",
+      "item": [
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.access_token);",
+                  "    console.log('Token guardado:', response.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login Técnico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"tecnico1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login Supervisor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"supervisor1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login Planificador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"planificador1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 FLUJO PLANIFICADOR - Creación de Trabajos",
+      "description": "Flujo completo del planificador para crear trabajos y asignar técnicos",
+      "item": [
+        {
+          "name": "1. Login como Planificador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.access_token);",
+                  "    pm.collectionVariables.set('planificador_id', response.user.id);",
+                  "    pm.collectionVariables.set('planificador_nombre', response.user.nombre);",
+                  "    console.log('✅ Planificador logueado:', response.user.nombre);",
+                  "    console.log('🔑 Token guardado');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"planificador1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "2. Obtener Áreas Disponibles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const areas = pm.response.json();",
+                  "    if (areas.length > 0) {",
+                  "        pm.collectionVariables.set('area_centro_id', '11873221-e21e-4a10-8d6f-2cd86df5e581');",
+                  "        pm.collectionVariables.set('area_sur_id', '70ddbbf7-1c1f-4083-a578-ad8059960ad4');",
+                  "        console.log('✅ Áreas disponibles:', areas.length);",
+                  "        areas.forEach(area => {",
+                  "            console.log(`   - ${area.nombre} (${area.id})`);",
+                  "        });",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/areas",
+              "host": ["{{base_url}}"],
+              "path": ["areas"]
+            }
+          }
+        },
+        {
+          "name": "3. Crear Trabajo - Instalación Transformador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const trabajo = pm.response.json();",
+                  "    pm.collectionVariables.set('nuevo_trabajo_id', trabajo.id);",
+                  "    pm.collectionVariables.set('nuevo_trabajo_titulo', trabajo.titulo);",
+                  "    console.log('✅ Trabajo creado exitosamente!');",
+                  "    console.log('   🆔 ID:', trabajo.id);",
+                  "    console.log('   📝 Título:', trabajo.titulo);",
+                  "    console.log('   📍 Área:', trabajo.area ? trabajo.area.nombre : 'N/A');",
+                  "    console.log('   👤 Técnico:', trabajo.tecnicoAsignado ? trabajo.tecnicoAsignado.nombre : 'N/A');",
+                  "    console.log('   📅 Fecha:', trabajo.fechaProgramada);",
+                  "    console.log('   🔧 Siguiente permiso:', trabajo.siguienteTipoPermiso);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Instalación de Transformador CYR SUR\",\n  \"descripcion\": \"Instalación de nuevo transformador de 500 KVA en subestación CYR SUR. Incluye conexión de alta tensión y pruebas de funcionamiento.\",\n  \"areaId\": \"70ddbbf7-1c1f-4083-a578-ad8059960ad4\",\n  \"tecnicoAsignadoId\": \"30e8713d-6f23-4b09-8c06-e948e20ccf16\",\n  \"estado\": \"pendiente\",\n  \"fechaProgramada\": \"2024-01-15T08:00:00.000Z\",\n  \"siguienteTipoPermiso\": \"altura\",\n  \"comentarios\": \"Trabajo requiere permisos de altura, enganche y cierre. Coordinar con equipo de seguridad.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/trabajos",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos"]
+            }
+          }
+        },
+        {
+          "name": "4. Crear Trabajo - Mantenimiento Red Centro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const trabajo = pm.response.json();",
+                  "    pm.collectionVariables.set('trabajo_centro_id', trabajo.id);",
+                  "    console.log('✅ Segundo trabajo creado!');",
+                  "    console.log('   🆔 ID:', trabajo.id);",
+                  "    console.log('   📝 Título:', trabajo.titulo);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Mantenimiento Preventivo Red Eléctrica Centro\",\n  \"descripcion\": \"Mantenimiento preventivo de la red eléctrica del área centro. Incluye revisión de conexiones, limpieza de aisladores y verificación de sistemas de protección.\",\n  \"areaId\": \"11873221-e21e-4a10-8d6f-2cd86df5e581\",\n  \"tecnicoAsignadoId\": \"30e8713d-6f23-4b09-8c06-e948e20ccf16\",\n  \"estado\": \"pendiente\",\n  \"fechaProgramada\": \"2024-01-16T09:00:00.000Z\",\n  \"siguienteTipoPermiso\": \"enganche\",\n  \"comentarios\": \"Requiere coordinación con operaciones para desenergizar circuitos.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/trabajos",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos"]
+            }
+          }
+        },
+        {
+          "name": "5. Verificar Trabajos Creados",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const trabajos = pm.response.json();",
+                  "    console.log('✅ Total de trabajos en el sistema:', trabajos.length);",
+                  "    trabajos.forEach((trabajo, index) => {",
+                  "        console.log(`   ${index + 1}. ${trabajo.titulo}`);",
+                  "        console.log(`      - Estado: ${trabajo.estado}`);",
+                  "        console.log(`      - Área: ${trabajo.area ? trabajo.area.nombre : 'N/A'}`);",
+                  "        console.log(`      - Técnico: ${trabajo.tecnicoAsignado ? trabajo.tecnicoAsignado.nombre : 'Sin asignar'}`);",
+                  "        console.log('');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trabajos",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos"]
+            }
+          }
+        },
+        {
+          "name": "6. Actualizar Trabajo - Cambiar Estado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const trabajo = pm.response.json();",
+                  "    console.log('✅ Trabajo actualizado!');",
+                  "    console.log('   Estado:', trabajo.estado);",
+                  "    console.log('   Fecha inicio real:', trabajo.fechaInicioReal);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"en_progreso\",\n  \"fechaInicioReal\": \"2024-01-15T08:30:00.000Z\",\n  \"comentarios\": \"Trabajo iniciado según cronograma. Técnico en sitio.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/trabajos/{{nuevo_trabajo_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos", "{{nuevo_trabajo_id}}"]
+            }
+          }
+        },
+        {
+          "name": "7. Reasignar Técnico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const trabajo = pm.response.json();",
+                  "    console.log('✅ Técnico reasignado!');",
+                  "    console.log('   Nuevo técnico:', trabajo.tecnicoAsignado ? trabajo.tecnicoAsignado.nombre : 'N/A');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tecnicoAsignadoId\": \"30e8713d-6f23-4b09-8c06-e948e20ccf16\",\n  \"comentarios\": \"Reasignación por disponibilidad de técnico especializado.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/trabajos/{{trabajo_centro_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos", "{{trabajo_centro_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Usuarios",
+      "item": [
+        {
+          "name": "Obtener todos los usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Obtener usuario por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/30e8713d-6f23-4b09-8c06-e948e20ccf16",
+              "host": ["{{base_url}}"],
+              "path": ["users", "30e8713d-6f23-4b09-8c06-e948e20ccf16"]
+            }
+          }
+        },
+        {
+          "name": "Obtener técnicos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/users/tecnicos",
+              "host": ["{{base_url}}"],
+              "path": ["users", "tecnicos"]
+            }
+          }
+        },
+        {
+          "name": "Crear usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Nuevo Usuario\",\n  \"email\": \"nuevo@demo.com\",\n  \"password\": \"123456\",\n  \"roleId\": \"ad5093ab-aa0d-4429-a1e1-975dc04d087e\",\n  \"areaId\": \"11873221-e21e-4a10-8d6f-2cd86df5e581\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏢 Áreas",
+      "item": [
+        {
+          "name": "Obtener todas las áreas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/areas",
+              "host": ["{{base_url}}"],
+              "path": ["areas"]
+            }
+          }
+        },
+        {
+          "name": "Crear área",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Nueva Área\",\n  \"descripcion\": \"Descripción del área\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/areas",
+              "host": ["{{base_url}}"],
+              "path": ["areas"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔑 Roles",
+      "item": [
+        {
+          "name": "Obtener todos los roles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["roles"]
+            }
+          }
+        },
+        {
+          "name": "Crear rol",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"nuevo-rol\",\n  \"descripcion\": \"Descripción del nuevo rol\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["roles"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Tipos de Permiso",
+      "item": [
+        {
+          "name": "Obtener tipos de permiso",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tipos-permiso",
+              "host": ["{{base_url}}"],
+              "path": ["tipos-permiso"]
+            }
+          }
+        },
+        {
+          "name": "Crear tipo de permiso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Nuevo Tipo\",\n  \"descripcion\": \"Descripción del nuevo tipo de permiso\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tipos-permiso",
+              "host": ["{{base_url}}"],
+              "path": ["tipos-permiso"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏗️ Trabajos",
+      "item": [
+        {
+          "name": "Obtener trabajos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trabajos",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos"]
+            }
+          }
+        },
+        {
+          "name": "Crear trabajo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Nuevo Trabajo de Mantenimiento\",\n  \"descripcion\": \"Descripción detallada del trabajo a realizar\",\n  \"areaId\": \"11873221-e21e-4a10-8d6f-2cd86df5e581\",\n  \"tecnicoAsignadoId\": \"30e8713d-6f23-4b09-8c06-e948e20ccf16\",\n  \"fechaProgramada\": \"2025-01-25T08:00:00.000Z\",\n  \"siguienteTipoPermiso\": \"altura\",\n  \"comentarios\": \"Trabajo requiere múltiples permisos de seguridad\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/trabajos",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos"]
+            }
+          }
+        },
+        {
+          "name": "Obtener trabajo por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/trabajos/312dea25-c3a8-40b7-be28-4dd318164607",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos", "312dea25-c3a8-40b7-be28-4dd318164607"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📄 Permisos",
+      "item": [
+        {
+          "name": "Crear Permiso de Altura",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trabajoId\": \"312dea25-c3a8-40b7-be28-4dd318164607\",\n  \"tecnicoId\": \"30e8713d-6f23-4b09-8c06-e948e20ccf16\",\n  \"tipoPermisoId\": \"45f2674e-efdd-4e71-b727-6c6cbc4ed3eb\",\n  \"estado\": \"pendiente\",\n  \"comentariosTecnico\": \"Solicito permiso de altura para mantenimiento de transformadores y postes eléctricos. Altura máxima: 8 metros. Equipos: Arnés, casco, botas de seguridad, línea de vida.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos",
+              "host": ["{{base_url}}"],
+              "path": ["permisos"]
+            }
+          }
+        },
+        {
+          "name": "Crear Permiso de Enganche",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trabajoId\": \"312dea25-c3a8-40b7-be28-4dd318164607\",\n  \"tecnicoId\": \"30e8713d-6f23-4b09-8c06-e948e20ccf16\",\n  \"tipoPermisoId\": \"6e680ae5-97d6-4944-86a1-7d2e5c36d05e\",\n  \"estado\": \"pendiente\",\n  \"comentariosTecnico\": \"Solicito permiso de enganche para izaje de transformadores y equipos pesados. Peso máximo: 2 toneladas. Equipos: Grúa, eslingas, casco, guantes, chaleco reflectivo.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos",
+              "host": ["{{base_url}}"],
+              "path": ["permisos"]
+            }
+          }
+        },
+        {
+          "name": "Crear Permiso de Cierre",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trabajoId\": \"312dea25-c3a8-40b7-be28-4dd318164607\",\n  \"tecnicoId\": \"30e8713d-6f23-4b09-8c06-e948e20ccf16\",\n  \"tipoPermisoId\": \"f4d943b0-82c2-4a81-abeb-64bf6fca1ddd\",\n  \"estado\": \"pendiente\",\n  \"comentariosTecnico\": \"Solicito permiso de cierre para trabajos en tableros eléctricos y circuitos de 13.2kV. Equipos: Guantes aislantes, casco, botas dieléctricas, herramientas certificadas.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos",
+              "host": ["{{base_url}}"],
+              "path": ["permisos"]
+            }
+          }
+        },
+        {
+          "name": "Aprobar Permiso",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aprobado\",\n  \"comentariosSupervisor\": \"Permiso aprobado. Se verificaron todos los equipos de seguridad requeridos.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos/PERMISO_ID",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "PERMISO_ID"]
+            }
+          }
+        },
+        {
+          "name": "Rechazar Permiso",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"rechazado\",\n  \"comentariosSupervisor\": \"Permiso rechazado. Faltan equipos de seguridad certificados.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos/PERMISO_ID",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "PERMISO_ID"]
+            }
+          }
+        },
+        {
+          "name": "Obtener permisos por trabajo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/permisos/trabajo/312dea25-c3a8-40b7-be28-4dd318164607",
+              "host": ["{{base_url}}"],
+              "path": [
+                "permisos",
+                "trabajo",
+                "312dea25-c3a8-40b7-be28-4dd318164607"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener permisos por técnico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/permisos/tecnico/30e8713d-6f23-4b09-8c06-e948e20ccf16",
+              "host": ["{{base_url}}"],
+              "path": [
+                "permisos",
+                "tecnico",
+                "30e8713d-6f23-4b09-8c06-e948e20ccf16"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener permisos pendientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/permisos/pendientes",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "pendientes"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔄 Flujo Completo de Permisos",
+      "description": "Secuencia completa del flujo de permisos desde la creación del trabajo hasta la aprobación",
+      "item": [
+        {
+          "name": "1. Login como Planificador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.access_token);",
+                  "    console.log('✅ Planificador logueado');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"planificador1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "2. Crear Trabajo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('trabajo_id', response.id);",
+                  "    console.log('✅ Trabajo creado:', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Mantenimiento Preventivo Transformadores\",\n  \"descripcion\": \"Mantenimiento preventivo de transformadores en área centro. Incluye revisión, limpieza y pruebas eléctricas.\",\n  \"areaId\": \"11873221-e21e-4a10-8d6f-2cd86df5e581\",\n  \"tecnicoAsignadoId\": \"30e8713d-6f23-4b09-8c06-e948e20ccf16\",\n  \"fechaProgramada\": \"2025-01-25T08:00:00.000Z\",\n  \"siguienteTipoPermiso\": \"altura\",\n  \"comentarios\": \"Trabajo requiere permisos de altura, enganche y cierre. Coordinar con supervisores.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/trabajos",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos"]
+            }
+          }
+        },
+        {
+          "name": "3. Login como Técnico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.access_token);",
+                  "    console.log('✅ Técnico logueado');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"tecnico1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "4. Solicitar Permiso de Altura",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('permiso_altura_id', response.id);",
+                  "    console.log('✅ Permiso de altura solicitado:', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trabajoId\": \"{{trabajo_id}}\",\n  \"tecnicoId\": \"30e8713d-6f23-4b09-8c06-e948e20ccf16\",\n  \"tipoPermisoId\": \"45f2674e-efdd-4e71-b727-6c6cbc4ed3eb\",\n  \"estado\": \"pendiente\",\n  \"comentariosTecnico\": \"Solicito permiso de altura para acceso a transformadores en postes de 8 metros. Equipos verificados: arnés, casco, botas de seguridad, línea de vida.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos",
+              "host": ["{{base_url}}"],
+              "path": ["permisos"]
+            }
+          }
+        },
+        {
+          "name": "5. Solicitar Permiso de Enganche",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('permiso_enganche_id', response.id);",
+                  "    console.log('✅ Permiso de enganche solicitado:', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trabajoId\": \"{{trabajo_id}}\",\n  \"tecnicoId\": \"30e8713d-6f23-4b09-8c06-e948e20ccf16\",\n  \"tipoPermisoId\": \"6e680ae5-97d6-4944-86a1-7d2e5c36d05e\",\n  \"estado\": \"pendiente\",\n  \"comentariosTecnico\": \"Solicito permiso de enganche para izaje de transformador de 1.5 toneladas. Grúa móvil disponible. Equipos verificados: eslingas certificadas, ganchos, casco, guantes.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos",
+              "host": ["{{base_url}}"],
+              "path": ["permisos"]
+            }
+          }
+        },
+        {
+          "name": "6. Solicitar Permiso de Cierre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('permiso_cierre_id', response.id);",
+                  "    console.log('✅ Permiso de cierre solicitado:', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trabajoId\": \"{{trabajo_id}}\",\n  \"tecnicoId\": \"30e8713d-6f23-4b09-8c06-e948e20ccf16\",\n  \"tipoPermisoId\": \"f4d943b0-82c2-4a81-abeb-64bf6fca1ddd\",\n  \"estado\": \"pendiente\",\n  \"comentariosTecnico\": \"Solicito permiso de cierre para desconexión de circuito de 13.2kV. Equipos verificados: guantes dieléctricos clase 2, botas aislantes, herramientas certificadas.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos",
+              "host": ["{{base_url}}"],
+              "path": ["permisos"]
+            }
+          }
+        },
+        {
+          "name": "7. Login como Supervisor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.access_token);",
+                  "    console.log('✅ Supervisor logueado');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"supervisor1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "8. Aprobar Permiso de Altura",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aprobado\",\n  \"comentariosSupervisor\": \"Permiso de altura APROBADO. Equipos de seguridad verificados y en buen estado. Técnico certificado para trabajos en altura.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos/{{permiso_altura_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "{{permiso_altura_id}}"]
+            }
+          }
+        },
+        {
+          "name": "9. Aprobar Permiso de Enganche",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aprobado\",\n  \"comentariosSupervisor\": \"Permiso de enganche APROBADO. Grúa inspeccionada y operador certificado. Eslingas en buen estado y capacidad adecuada.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos/{{permiso_enganche_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "{{permiso_enganche_id}}"]
+            }
+          }
+        },
+        {
+          "name": "10. Aprobar Permiso de Cierre",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aprobado\",\n  \"comentariosSupervisor\": \"Permiso de cierre APROBADO. Equipos dieléctricos verificados y certificados. Procedimiento de cierre autorizado.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos/{{permiso_cierre_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "{{permiso_cierre_id}}"]
+            }
+          }
+        },
+        {
+          "name": "11. Verificar Estado Final",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/permisos/trabajo/{{trabajo_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "trabajo", "{{trabajo_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

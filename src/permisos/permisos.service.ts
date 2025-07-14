@@ -7,6 +7,7 @@ import { CreatePermisoDto } from './dto/create-permiso.dto';
 import { AuthorizePermisoDto } from './dto/update-permiso.dto';
 import { Trabajo, TrabajoEstado, SecuenciaPermiso } from '../trabajos/entities/trabajo.entity';
 import { User } from '../users/entities/user.entity';
+import { Role } from '../roles/entities/role.entity';
 import { TipoPermiso } from '../tipos-permiso/entities/tipo-permiso.entity';
 
 import { EventsService } from '../events/events.service';
@@ -46,8 +47,11 @@ export class PermisosService {
     }
     console.log('Trabajo encontrado:', trabajo.titulo);
 
-    const tecnico = await this.usersRepository.findOneBy({ id: createPermisoDto.tecnicoId });
-    if (!tecnico || tecnico.rol !== 'tecnico') {
+    const tecnico = await this.usersRepository.findOne({ 
+      where: { id: createPermisoDto.tecnicoId },
+      relations: ['role']
+    });
+    if (!tecnico || tecnico.role?.nombre !== 'tecnico') {
       console.log('Error: Técnico no válido o rol incorrecto para ID:', createPermisoDto.tecnicoId);
       throw new BadRequestException('Técnico no válido o rol incorrecto.');
     }
@@ -225,8 +229,11 @@ export class PermisosService {
     console.log(`--- Método authorizePermiso (inicio) para ID: ${id} ---`);
     console.log('DTO de autorización recibido:', authorizePermisoDto);
 
-    const supervisor = await this.usersRepository.findOneBy({ id: authorizePermisoDto.supervisorId });
-    if (!supervisor || supervisor.rol !== 'supervisor') {
+    const supervisor = await this.usersRepository.findOne({ 
+      where: { id: authorizePermisoDto.supervisorId },
+      relations: ['role']
+    });
+    if (!supervisor || supervisor.role?.nombre !== 'supervisor') {
       console.log('Error: Supervisor no válido o rol incorrecto para ID:', authorizePermisoDto.supervisorId);
       throw new BadRequestException('Supervisor no válido o rol incorrecto.');
     }

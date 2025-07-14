@@ -32,7 +32,7 @@ export class AuthService {
     const payload = {
       email: user.email,
       sub: user.id,
-      rol: user.rol,
+      rol: user.role?.nombre || 'sin_rol',
       nombre: user.nombre,
       areaId: user.areaId, // Esto puede ser string o null, si viene de la DB
     };
@@ -43,7 +43,7 @@ export class AuthService {
         id: user.id,
         nombre: user.nombre,
         email: user.email,
-        rol: user.rol,
+        rol: user.role?.nombre || 'sin_rol',
         areaId: user.areaId || null, // Asegura que sea string o null
       },
     };
@@ -66,7 +66,7 @@ export class AuthService {
     const payload = {
       email: newUser.email,
       sub: newUser.id,
-      rol: newUser.rol,
+      rol: newUser.role?.nombre || 'sin_rol',
       nombre: newUser.nombre,
       areaId: newUser.areaId,
     };
@@ -77,7 +77,7 @@ export class AuthService {
         id: newUser.id,
         nombre: newUser.nombre,
         email: newUser.email,
-        rol: newUser.rol,
+        rol: newUser.role?.nombre || 'sin_rol',
         areaId: newUser.areaId || null,
       },
     };

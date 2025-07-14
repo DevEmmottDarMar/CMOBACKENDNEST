@@ -6,6 +6,7 @@ import { PermisosController } from './permisos.controller';
 import { Permiso } from './entities/permiso.entity';
 import { Trabajo } from '../trabajos/entities/trabajo.entity';
 import { User } from '../users/entities/user.entity';
+import { Role } from '../roles/entities/role.entity';
 import { EventsModule } from '../events/events.module';
 import { TrabajosModule } from '../trabajos/trabajos.module';
 
@@ -20,7 +21,7 @@ import { S3Module } from '../s3/s3.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Permiso, Trabajo, User, TipoPermiso]), // <-- ¡Asegúrate de que TipoPermiso esté aquí!
+    TypeOrmModule.forFeature([Permiso, Trabajo, User, TipoPermiso, Role]), // <-- ¡Asegúrate de que TipoPermiso y Role estén aquí!
     EventsModule,
     TrabajosModule,
     TiposPermisoModule, // <-- ¡AGREGAR TiposPermisoModule a los imports!

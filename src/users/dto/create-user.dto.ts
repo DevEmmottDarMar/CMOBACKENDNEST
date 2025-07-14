@@ -3,7 +3,6 @@ import {
   IsString,
   IsEmail,
   MinLength,
-  IsEnum,
   IsOptional,
   IsUUID,
 } from 'class-validator';
@@ -37,12 +36,12 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({
-    description: 'Rol del usuario en el sistema',
-    enum: ['tecnico', 'supervisor', 'admin'],
-    example: 'tecnico'
+    description: 'ID del rol del usuario',
+    example: '8476471a-4c5c-4938-9f0f-7b8ac9242b4c',
+    format: 'uuid'
   })
-  @IsEnum(['tecnico', 'supervisor', 'admin'])
-  rol: 'tecnico' | 'supervisor' | 'admin';
+  @IsUUID()
+  roleId: string;
 
   @ApiPropertyOptional({
     description: 'ID del área a la que pertenece el usuario (opcional para admin)',

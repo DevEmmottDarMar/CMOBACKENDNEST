@@ -84,16 +84,19 @@ async function bootstrap() {
   });
   // ================================
 
+  // Configuración de CORS más flexible para producción
+  const corsOrigins = configService.get<string>('CORS_ORIGIN')?.split(',') || [
+    // Localhost para desarrollo
+    'http://localhost:3000',
+    'http://localhost:3001', 
+    'http://localhost:8080',
+    /^http:\/\/localhost:\d+$/, // Para React Native Web
+    // IPs específicas necesarias
+    'http://10.0.2.2:3000',     // Para el emulador de Android
+  ];
+
   app.enableCors({
-    origin: [
-      // Localhost para desarrollo
-      'http://localhost:3000',
-      'http://localhost:3001', 
-      'http://localhost:8080',
-      /^http:\/\/localhost:\d+$/, // Para React Native Web
-      // IPs específicas necesarias
-      'http://10.0.2.2:3000',     // Para el emulador de Android
-    ],
+    origin: corsOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

@@ -1,0 +1,451 @@
+{
+  "info": {
+    "name": "CMO Permisos - Flujo Completo",
+    "description": "Colección completa para el flujo de permisos con fotos y aprobación del supervisor",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tecnico_id",
+      "value": "8476471a-4c5c-4938-9f0f-7b8ac9242b4c",
+      "type": "string"
+    },
+    {
+      "key": "supervisor_id",
+      "value": "2879a157-654d-46ed-be30-3554a0b7a40d",
+      "type": "string"
+    },
+    {
+      "key": "trabajo_id",
+      "value": "e1d68650-a7c2-435e-9623-7e4249e8f00e",
+      "type": "string"
+    },
+    {
+      "key": "tipo_permiso_altura",
+      "value": "45f2674e-efdd-4e71-b727-6c6cbc4ed3eb",
+      "type": "string"
+    },
+    {
+      "key": "tipo_permiso_enganche",
+      "value": "6e680ae5-97d6-4944-86a1-7d2e5c36d05e",
+      "type": "string"
+    },
+    {
+      "key": "tipo_permiso_cierre",
+      "value": "f4d943b0-82c2-4a81-abeb-64bf6fca1ddd",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Autenticación",
+      "item": [
+        {
+          "name": "Login Técnico",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"tecnico1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('token', response.access_token);",
+                  "    console.log('Token guardado:', response.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Supervisor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"supervisor1@demo.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('token', response.access_token);",
+                  "    console.log('Token guardado:', response.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📋 Gestión de Permisos",
+      "item": [
+        {
+          "name": "Crear Permiso ALTURA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trabajoId\": \"{{trabajo_id}}\",\n  \"tecnicoId\": \"{{tecnico_id}}\",\n  \"tipoPermisoId\": \"{{tipo_permiso_altura}}\",\n  \"estado\": \"pendiente\",\n  \"comentariosTecnico\": \"Necesito acceso a áreas elevadas para realizar el mantenimiento\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos",
+              "host": ["{{base_url}}"],
+              "path": ["permisos"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('permiso_id', response.id);",
+                  "    console.log('Permiso creado:', response.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear Permiso ENGANCHE",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trabajoId\": \"{{trabajo_id}}\",\n  \"tecnicoId\": \"{{tecnico_id}}\",\n  \"tipoPermisoId\": \"{{tipo_permiso_enganche}}\",\n  \"estado\": \"pendiente\",\n  \"comentariosTecnico\": \"Necesito realizar trabajos de enganche en la zona\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos",
+              "host": ["{{base_url}}"],
+              "path": ["permisos"]
+            }
+          }
+        },
+        {
+          "name": "Crear Permiso CIERRE",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trabajoId\": \"{{trabajo_id}}\",\n  \"tecnicoId\": \"{{tecnico_id}}\",\n  \"tipoPermisoId\": \"{{tipo_permiso_cierre}}\",\n  \"estado\": \"pendiente\",\n  \"comentariosTecnico\": \"Necesito realizar trabajos de cierre en el área\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos",
+              "host": ["{{base_url}}"],
+              "path": ["permisos"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Permisos Pendientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/permisos/pendientes",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "pendientes"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Permisos por Técnico",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/permisos/tecnico/{{tecnico_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "tecnico", "{{tecnico_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Permisos por Trabajo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/permisos/by-trabajo/{{trabajo_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "by-trabajo", "{{trabajo_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Permiso por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/permisos/{{permiso_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "{{permiso_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📸 Gestión de Fotos",
+      "item": [
+        {
+          "name": "Subir Foto del Permiso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permisoId\": \"{{permiso_id}}\",\n  \"base64Data\": \"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxAAPwCdABmX/9k=\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos/upload-image",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "upload-image"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "✅ Aprobación de Permisos",
+      "item": [
+        {
+          "name": "Aprobar Permiso",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"aprobado\",\n  \"supervisorId\": \"{{supervisor_id}}\",\n  \"comentariosSupervisor\": \"Permiso aprobado. Asegúrate de usar el equipo de protección\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos/{{permiso_id}}/authorize",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "{{permiso_id}}", "authorize"]
+            }
+          }
+        },
+        {
+          "name": "Rechazar Permiso",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"rechazado\",\n  \"supervisorId\": \"{{supervisor_id}}\",\n  \"comentariosSupervisor\": \"Faltan puntos de anclaje verificados\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/permisos/{{permiso_id}}/authorize",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "{{permiso_id}}", "authorize"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🗑️ Eliminación",
+      "item": [
+        {
+          "name": "Eliminar Permiso",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/permisos/{{permiso_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["permisos", "{{permiso_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔧 Utilidades",
+      "item": [
+        {
+          "name": "Obtener Tipos de Permiso",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tipos-permiso",
+              "host": ["{{base_url}}"],
+              "path": ["tipos-permiso"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Trabajos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/trabajos",
+              "host": ["{{base_url}}"],
+              "path": ["trabajos"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+} 

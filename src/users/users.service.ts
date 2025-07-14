@@ -10,6 +10,8 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Area } from '../areas/entities/area.entity'; // Importa Area para la validación (si la usas)
+import { Role } from '../roles/entities/role.entity'; // Importa Role para la validación
+
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -17,6 +19,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Role)
+    private rolesRepository: Repository<Role>,
     // Si necesitas AreaRepository en otros métodos, inyectalo aquí:
     // @InjectRepository(Area)
     // private areasRepository: Repository<Area>,
@@ -29,9 +33,24 @@ export class UsersService {
       throw new BadRequestException('El email ya está registrado.');
     }
 
+    // Verificar si el rol existe
+    if (createUserDto.roleId) {
+      const role = await this.rolesRepository.findOne({
+        where: { id: createUserDto.roleId },
+      });
+      if (!role) {
+        throw new BadRequestException(
+          `Rol con ID "${createUserDto.roleId}" no encontrado.`,
+        );
+      }
+    }
+
     // Hashear la contraseña
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      saltRounds,
+    );
 
     // Crear usuario con contraseña hasheada
     const createdUser = this.usersRepository.create({
@@ -43,19 +62,24 @@ export class UsersService {
   }
 
   async findAll(areaId?: string): Promise<User[]> {
-    const findOptions: any = { where: {} };
-    // Si tu User.entity.ts tiene la relación 'area' y quieres poblarla:
-    // findOptions.relations = ['area'];
+    const findOptions: any = {
+      relations: ['role', 'area'],
+      order: { nombre: 'ASC' },
+    };
 
     if (areaId) {
-      findOptions.where.area = { id: areaId }; // Asumiendo que User tiene una relación 'area'
+      findOptions.where = { areaId };
     }
+
     return this.usersRepository.find(findOptions);
   }
 
-  //buscra todos los tecnicos
+  //buscar todos los tecnicos
   async findAllTechnicians(): Promise<User[]> {
-    return this.usersRepository.find({ where: { rol: 'tecnico' } });
+    return this.usersRepository.find({
+      where: { role: { nombre: 'tecnico' } },
+      relations: ['role', 'area'],
+    });
   }
 
   // Método alias para findAllTechnicians
@@ -65,7 +89,10 @@ export class UsersService {
 
   // === CORRECCIÓN AQUÍ: Cambia el tipo de retorno a 'User | null' ===
   async findOneById(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id } });
+    return this.usersRepository.findOne({
+      where: { id },
+      relations: ['role', 'area'],
+    });
   }
 
   // Método alias para findOneById
@@ -79,7 +106,10 @@ export class UsersService {
 
   // === CORRECCIÓN AQUÍ: Cambia el tipo de retorno a 'User | null' ===
   async findOneByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { email } });
+    return this.usersRepository.findOne({
+      where: { email },
+      relations: ['role', 'area'],
+    });
   }
   // ==========================================================
 
@@ -89,10 +119,25 @@ export class UsersService {
       throw new NotFoundException(`Usuario con ID "${id}" no encontrado.`);
     }
 
+    // Si se está actualizando el rol, verificar que existe
+    if (updateUserDto.roleId) {
+      const role = await this.rolesRepository.findOne({
+        where: { id: updateUserDto.roleId },
+      });
+      if (!role) {
+        throw new BadRequestException(
+          `Rol con ID "${updateUserDto.roleId}" no encontrado.`,
+        );
+      }
+    }
+
     // Si se está actualizando la contraseña, hashearla
     if (updateUserDto.password) {
       const saltRounds = 10;
-      updateUserDto.password = await bcrypt.hash(updateUserDto.password, saltRounds);
+      updateUserDto.password = await bcrypt.hash(
+        updateUserDto.password,
+        saltRounds,
+      );
     }
 
     // Si se está actualizando el email, verificar que no exista
@@ -117,7 +162,10 @@ export class UsersService {
 
   //listar usuarios por area
   async findAllByArea(areaId: string): Promise<User[]> {
-    return this.usersRepository.find({ where: { areaId } });
+    return this.usersRepository.find({
+      where: { areaId },
+      relations: ['role', 'area'],
+    });
   }
 
   // Método alias para findAllByArea
@@ -126,7 +174,26 @@ export class UsersService {
   }
 
   // Método para verificar contraseña
-  async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
+  async verifyPassword(
+    plainPassword: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
+  }
+
+  // Método para obtener usuarios por rol
+  async findByRole(roleId: string): Promise<User[]> {
+    return this.usersRepository.find({
+      where: { roleId },
+      relations: ['role', 'area'],
+    });
+  }
+
+  // Método para obtener usuarios por nombre de rol
+  async findByRoleName(roleName: string): Promise<User[]> {
+    return this.usersRepository.find({
+      where: { role: { nombre: roleName } },
+      relations: ['role', 'area'],
+    });
   }
 }

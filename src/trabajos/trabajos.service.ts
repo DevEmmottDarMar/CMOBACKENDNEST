@@ -15,6 +15,7 @@ import { CreateTrabajoDto } from './dto/create-trabajo.dto';
 import { UpdateTrabajoDto } from './dto/update-trabajo.dto';
 import { User } from '../users/entities/user.entity';
 import { Area } from '../areas/entities/area.entity';
+import { Role } from '../roles/entities/role.entity';
 
 @Injectable()
 export class TrabajosService {
@@ -46,10 +47,11 @@ export class TrabajosService {
 
     let tecnicoAsignado: User | undefined = undefined;
     if (tecnicoAsignadoId) {
-      tecnicoAsignado = await this.usersRepository.findOneBy({
-        id: tecnicoAsignadoId,
+      tecnicoAsignado = await this.usersRepository.findOne({
+        where: { id: tecnicoAsignadoId },
+        relations: ['role']
       }) || undefined;
-      if (!tecnicoAsignado || tecnicoAsignado.rol !== 'tecnico') {
+      if (!tecnicoAsignado || tecnicoAsignado.role?.nombre !== 'tecnico') {
         throw new BadRequestException(
           'Técnico asignado no válido o rol incorrecto.',
         );
@@ -160,10 +162,11 @@ export class TrabajosService {
         updatedTrabajo.tecnicoAsignadoId = undefined;
       } else {
         // Si se envió un ID, buscar y vincular
-        const tecnico = await this.usersRepository.findOneBy({
-          id: tecnicoAsignadoId,
+        const tecnico = await this.usersRepository.findOne({
+          where: { id: tecnicoAsignadoId },
+          relations: ['role']
         });
-        if (!tecnico || tecnico.rol !== 'tecnico') {
+        if (!tecnico || tecnico.role?.nombre !== 'tecnico') {
           throw new BadRequestException(
             'Técnico asignado no válido o rol incorrecto.',
           );

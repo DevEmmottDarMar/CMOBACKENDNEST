@@ -51,14 +51,15 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
             return;
           }
           const clientId = request.headers['sec-websocket-key'] || Date.now().toString();
-          this.clients.set(clientId, { ws, userId: user.id, rol: user.rol, areaId: user.areaId });
-          this.logger.log(`Cliente autenticado: ${user.nombre} (${user.rol})`);
+          const userRole = user.role?.nombre || 'sin_rol';
+          this.clients.set(clientId, { ws, userId: user.id, rol: userRole, areaId: user.areaId });
+          this.logger.log(`Cliente autenticado: ${user.nombre} (${userRole})`);
           this.emitConnectedUsers();
 
           ws.on('close', () => {
             this.clients.delete(clientId);
             this.emitConnectedUsers();
-            this.logger.log(`Cliente desconectado: ${user.nombre} (${user.rol})`);
+            this.logger.log(`Cliente desconectado: ${user.nombre} (${userRole})`);
           });
 
           ws.on('error', (error: Error) => {
