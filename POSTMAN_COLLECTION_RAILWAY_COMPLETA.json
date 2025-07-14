@@ -1084,6 +1084,754 @@
       ]
     },
     {
+      "name": "🔄 Flujos Completos",
+      "item": [
+        {
+          "name": "Flujo 1: Planificador Crea Trabajo",
+          "item": [
+            {
+              "name": "1. Login Planificador",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"planificador1@demo.com\",\n  \"password\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "login"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    pm.collectionVariables.set('access_token', response.access_token);",
+                      "    pm.collectionVariables.set('planificador_id', response.user.id);",
+                      "    console.log('✅ Planificador logueado:', response.user.nombre);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "2. Obtener Áreas Disponibles",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/areas",
+                  "host": ["{{base_url}}"],
+                  "path": ["areas"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const areas = pm.response.json();",
+                      "    console.log('✅ Áreas disponibles:', areas.length);",
+                      "    areas.forEach(area => {",
+                      "        console.log(`- ${area.nombre}: ${area.id}`);",
+                      "    });",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "3. Crear Trabajo - Instalación Transformador",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"titulo\": \"Instalación de Transformador 500KVA\",\n  \"descripcion\": \"Instalación de nuevo transformador de 500 KVA en subestación. Incluye conexión de alta tensión y pruebas de funcionamiento.\",\n  \"areaId\": \"{{area_sur_id}}\",\n  \"tecnicoAsignadoId\": \"{{tecnico_id}}\",\n  \"fechaProgramada\": \"2025-07-20T08:00:00.000Z\",\n  \"siguienteTipoPermiso\": \"altura\",\n  \"comentarios\": \"Trabajo requiere permisos de altura, enganche y cierre. Coordinar con equipo de seguridad.\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/trabajos",
+                  "host": ["{{base_url}}"],
+                  "path": ["trabajos"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const trabajo = pm.response.json();",
+                      "    pm.collectionVariables.set('trabajo_id', trabajo.id);",
+                      "    console.log('✅ Trabajo creado:', trabajo.titulo);",
+                      "    console.log('📋 ID:', trabajo.id);",
+                      "    console.log('🏢 Área:', trabajo.area?.nombre);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "4. Verificar Trabajo Creado",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/trabajos/{{trabajo_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["trabajos", "{{trabajo_id}}"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const trabajo = pm.response.json();",
+                      "    console.log('✅ Trabajo verificado:');",
+                      "    console.log('- Título:', trabajo.titulo);",
+                      "    console.log('- Estado:', trabajo.estado);",
+                      "    console.log('- Técnico:', trabajo.tecnicoAsignado?.nombre);",
+                      "    console.log('- Área:', trabajo.area?.nombre);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Flujo 2: Técnico Solicita Permisos",
+          "item": [
+            {
+              "name": "1. Login Técnico",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"tecnico1@demo.com\",\n  \"password\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "login"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    pm.collectionVariables.set('access_token', response.access_token);",
+                      "    console.log('✅ Técnico logueado:', response.user.nombre);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "2. Crear Permiso ALTURA",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"trabajoId\": \"{{trabajo_id}}\",\n  \"tecnicoId\": \"{{tecnico_id}}\",\n  \"tipoPermisoId\": \"{{tipo_permiso_altura}}\",\n  \"estado\": \"pendiente\",\n  \"comentariosTecnico\": \"Necesito acceso a áreas elevadas para instalación de transformador. Altura máxima: 8 metros.\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/permisos",
+                  "host": ["{{base_url}}"],
+                  "path": ["permisos"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const permiso = pm.response.json();",
+                      "    pm.collectionVariables.set('permiso_id', permiso.id);",
+                      "    console.log('✅ Permiso ALTURA creado:', permiso.id);",
+                      "    console.log('📋 Estado:', permiso.estado);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "3. Subir Foto del Permiso",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"permisoId\": \"{{permiso_id}}\",\n  \"base64Data\": \"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/permisos/upload-image",
+                  "host": ["{{base_url}}"],
+                  "path": ["permisos", "upload-image"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    console.log('✅ Foto subida exitosamente');",
+                      "    console.log('🖼️ URL:', response.imagenUrl);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "4. Crear Permiso ENGANCHE",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"trabajoId\": \"{{trabajo_id}}\",\n  \"tecnicoId\": \"{{tecnico_id}}\",\n  \"tipoPermisoId\": \"{{tipo_permiso_enganche}}\",\n  \"estado\": \"pendiente\",\n  \"comentariosTecnico\": \"Necesito realizar trabajos de enganche para instalación del transformador. Peso estimado: 2 toneladas.\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/permisos",
+                  "host": ["{{base_url}}"],
+                  "path": ["permisos"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const permiso = pm.response.json();",
+                      "    console.log('✅ Permiso ENGANCHE creado:', permiso.id);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "5. Crear Permiso CIERRE",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"trabajoId\": \"{{trabajo_id}}\",\n  \"tecnicoId\": \"{{tecnico_id}}\",\n  \"tipoPermisoId\": \"{{tipo_permiso_cierre}}\",\n  \"estado\": \"pendiente\",\n  \"comentariosTecnico\": \"Necesito realizar trabajos de cierre eléctrico para conexión final del transformador. Voltaje: 13.8 KV.\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/permisos",
+                  "host": ["{{base_url}}"],
+                  "path": ["permisos"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const permiso = pm.response.json();",
+                      "    console.log('✅ Permiso CIERRE creado:', permiso.id);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "6. Ver Mis Permisos Solicitados",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/permisos/tecnico/{{tecnico_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["permisos", "tecnico", "{{tecnico_id}}"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const permisos = pm.response.json();",
+                      "    console.log('✅ Permisos del técnico:', permisos.length);",
+                      "    permisos.forEach(p => {",
+                      "        console.log(`- ${p.tipoPermiso.nombre}: ${p.estado}`);",
+                      "    });",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Flujo 3: Supervisor Aprueba Permisos",
+          "item": [
+            {
+              "name": "1. Login Supervisor",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"supervisor1@demo.com\",\n  \"password\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "login"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    pm.collectionVariables.set('access_token', response.access_token);",
+                      "    console.log('✅ Supervisor logueado:', response.user.nombre);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "2. Ver Permisos Pendientes",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/permisos/pendientes",
+                  "host": ["{{base_url}}"],
+                  "path": ["permisos", "pendientes"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const permisos = pm.response.json();",
+                      "    console.log('✅ Permisos pendientes:', permisos.length);",
+                      "    permisos.forEach(p => {",
+                      "        console.log(`- ${p.tipoPermiso.nombre} (${p.tecnico.nombre}): ${p.id}`);",
+                      "        if (p.tipoPermiso.nombre === 'Altura') {",
+                      "            pm.collectionVariables.set('permiso_altura_id', p.id);",
+                      "        }",
+                      "    });",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "3. Aprobar Permiso ALTURA",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"estado\": \"aprobado\",\n  \"supervisorId\": \"{{supervisor_id}}\",\n  \"comentariosSupervisor\": \"Permiso aprobado. Verificar uso de arnés y línea de vida. Equipo de protección validado.\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/permisos/{{permiso_altura_id}}/authorize",
+                  "host": ["{{base_url}}"],
+                  "path": ["permisos", "{{permiso_altura_id}}", "authorize"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const permiso = pm.response.json();",
+                      "    console.log('✅ Permiso ALTURA aprobado');",
+                      "    console.log('📝 Estado:', permiso.estado);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "4. Aprobar Permisos Restantes",
+              "item": [
+                {
+                  "name": "Aprobar ENGANCHE",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/permisos/pendientes",
+                      "host": ["{{base_url}}"],
+                      "path": ["permisos", "pendientes"]
+                    }
+                  },
+                  "event": [
+                    {
+                      "listen": "test",
+                      "script": {
+                        "exec": [
+                          "if (pm.response.code === 200) {",
+                          "    const permisos = pm.response.json();",
+                          "    const permisoEnganche = permisos.find(p => p.tipoPermiso.nombre === 'Enganche');",
+                          "    if (permisoEnganche) {",
+                          "        const approveBody = {",
+                          "            estado: 'aprobado',",
+                          "            supervisorId: pm.collectionVariables.get('supervisor_id'),",
+                          "            comentariosSupervisor: 'Permiso de enganche aprobado. Verificar grúa y capacidad de carga.'",
+                          "        };",
+                          "        pm.sendRequest({",
+                          "            url: `${pm.collectionVariables.get('base_url')}/permisos/${permisoEnganche.id}/authorize`,",
+                          "            method: 'PATCH',",
+                          "            header: {",
+                          "                'Content-Type': 'application/json',",
+                          "                'Authorization': `Bearer ${pm.collectionVariables.get('access_token')}`",
+                          "            },",
+                          "            body: {",
+                          "                mode: 'raw',",
+                          "                raw: JSON.stringify(approveBody)",
+                          "            }",
+                          "        }, (err, res) => {",
+                          "            if (!err && res.code === 200) {",
+                          "                console.log('✅ Permiso ENGANCHE aprobado automáticamente');",
+                          "            }",
+                          "        });",
+                          "    }",
+                          "}",
+                          "",
+                          "// Aprobar CIERRE también",
+                          "setTimeout(() => {",
+                          "    pm.sendRequest({",
+                          "        url: `${pm.collectionVariables.get('base_url')}/permisos/pendientes`,",
+                          "        method: 'GET',",
+                          "        header: {",
+                          "            'Authorization': `Bearer ${pm.collectionVariables.get('access_token')}`",
+                          "        }",
+                          "    }, (err, res) => {",
+                          "        if (!err && res.code === 200) {",
+                          "            const permisos = res.json();",
+                          "            const permisoCierre = permisos.find(p => p.tipoPermiso.nombre === 'Cierre');",
+                          "            if (permisoCierre) {",
+                          "                const approveBody = {",
+                          "                    estado: 'aprobado',",
+                          "                    supervisorId: pm.collectionVariables.get('supervisor_id'),",
+                          "                    comentariosSupervisor: 'Permiso de cierre aprobado. Verificar herramientas dieléctricas y EPP.'",
+                          "                };",
+                          "                pm.sendRequest({",
+                          "                    url: `${pm.collectionVariables.get('base_url')}/permisos/${permisoCierre.id}/authorize`,",
+                          "                    method: 'PATCH',",
+                          "                    header: {",
+                          "                        'Content-Type': 'application/json',",
+                          "                        'Authorization': `Bearer ${pm.collectionVariables.get('access_token')}`",
+                          "                    },",
+                          "                    body: {",
+                          "                        mode: 'raw',",
+                          "                        raw: JSON.stringify(approveBody)",
+                          "                    }",
+                          "                }, (err, res) => {",
+                          "                    if (!err && res.code === 200) {",
+                          "                        console.log('✅ Permiso CIERRE aprobado automáticamente');",
+                          "                    }",
+                          "                });",
+                          "            }",
+                          "        }",
+                          "    });",
+                          "}, 1000);"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "5. Verificar Todos los Permisos Aprobados",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/permisos/by-trabajo/{{trabajo_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["permisos", "by-trabajo", "{{trabajo_id}}"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const permisos = pm.response.json();",
+                      "    console.log('🎯 RESUMEN FINAL DE PERMISOS:');",
+                      "    permisos.forEach(p => {",
+                      "        console.log(`✅ ${p.tipoPermiso.nombre}: ${p.estado.toUpperCase()}`);",
+                      "        if (p.imagenUrl) {",
+                      "            console.log(`   📷 Foto: ${p.imagenUrl}`);",
+                      "        }",
+                      "    });",
+                      "    ",
+                      "    const aprobados = permisos.filter(p => p.estado === 'aprobado').length;",
+                      "    console.log(`\\n🎉 RESULTADO: ${aprobados}/${permisos.length} permisos aprobados`);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Flujo 4: Testing Completo del Sistema",
+          "item": [
+            {
+              "name": "1. Inicializar Sistema",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/api",
+                  "host": ["{{base_url}}"],
+                  "path": ["api"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "console.log('🚀 INICIANDO TESTING COMPLETO DEL SISTEMA CMO');",
+                      "console.log('='.repeat(50));",
+                      "console.log('🌐 URL Base:', pm.collectionVariables.get('base_url'));",
+                      "console.log('📅 Fecha:', new Date().toISOString());",
+                      "console.log('='.repeat(50));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "2. Verificar Usuarios del Sistema",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin1@demo.com\",\n  \"password\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["auth", "login"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    pm.collectionVariables.set('access_token', response.access_token);",
+                      "    ",
+                      "    // Obtener todos los usuarios",
+                      "    pm.sendRequest({",
+                      "        url: `${pm.collectionVariables.get('base_url')}/users`,",
+                      "        method: 'GET',",
+                      "        header: {",
+                      "            'Authorization': `Bearer ${response.access_token}`",
+                      "        }",
+                      "    }, (err, res) => {",
+                      "        if (!err && res.code === 200) {",
+                      "            const users = res.json();",
+                      "            console.log('👥 USUARIOS EN EL SISTEMA:');",
+                      "            users.forEach(user => {",
+                      "                console.log(`- ${user.nombre} (${user.email}) - Rol: ${user.role.nombre}`);",
+                      "            });",
+                      "        }",
+                      "    });",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "3. Verificar Tipos de Permiso",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/tipos-permiso",
+                  "host": ["{{base_url}}"],
+                  "path": ["tipos-permiso"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const tipos = pm.response.json();",
+                      "    console.log('\\n📋 TIPOS DE PERMISO DISPONIBLES:');",
+                      "    tipos.forEach(tipo => {",
+                      "        console.log(`- ${tipo.nombre}: ${tipo.descripcion.substring(0, 60)}...`);",
+                      "    });",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "4. Verificar Áreas Operativas",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/areas",
+                  "host": ["{{base_url}}"],
+                  "path": ["areas"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const areas = pm.response.json();",
+                      "    console.log('\\n🏢 ÁREAS OPERATIVAS:');",
+                      "    areas.forEach(area => {",
+                      "        console.log(`- ${area.nombre}: ${area.descripcion}`);",
+                      "    });",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "5. Verificar Trabajos Existentes",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/trabajos",
+                  "host": ["{{base_url}}"],
+                  "path": ["trabajos"]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const trabajos = pm.response.json();",
+                      "    console.log('\\n🏗️ TRABAJOS EN EL SISTEMA:');",
+                      "    trabajos.forEach(trabajo => {",
+                      "        console.log(`- ${trabajo.titulo} (${trabajo.estado})`);",
+                      "        console.log(`  Técnico: ${trabajo.tecnicoAsignado?.nombre}`);",
+                      "        console.log(`  Área: ${trabajo.area?.nombre}`);",
+                      "    });",
+                      "    console.log('\\n🎯 SISTEMA COMPLETAMENTE VERIFICADO ✅');",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "🔍 Health Check",
       "item": [
         {
