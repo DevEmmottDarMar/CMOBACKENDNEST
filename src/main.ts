@@ -92,15 +92,42 @@ async function bootstrap() {
     'http://localhost:8080',
     'http://localhost:51698',   // Flutter web default port
     'http://localhost:51745',   // Flutter web debug port
+    'http://localhost:52589',   // Flutter web current port
+    'http://localhost:52626',   // Flutter web debug port
     /^http:\/\/localhost:\d+$/, // Para cualquier puerto de localhost
     // IPs específicas necesarias
     'http://10.0.2.2:3000',     // Para el emulador de Android
   ];
 
   app.enableCors({
-    origin: corsOrigins,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: (origin, callback) => {
+      // Permitir requests sin origin (como aplicaciones móviles)
+      if (!origin) return callback(null, true);
+      
+      // Permitir cualquier puerto de localhost para desarrollo
+      if (origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:')) {
+        return callback(null, true);
+      }
+      
+      // Permitir orígenes específicos de la lista
+      if (corsOrigins.some(allowedOrigin => {
+        if (typeof allowedOrigin === 'string') {
+          return allowedOrigin === origin;
+        }
+        if (allowedOrigin instanceof RegExp) {
+          return allowedOrigin.test(origin);
+        }
+        return false;
+      })) {
+        return callback(null, true);
+      }
+      
+      // Denegar otros orígenes
+      callback(new Error('Not allowed by CORS'));
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
+    allowedHeaders: 'Content-Type,Authorization,X-Requested-With',
   });
 
   // Configurar límite de tamaño para peticiones (para subida de imágenes)
