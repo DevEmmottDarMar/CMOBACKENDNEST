@@ -35,38 +35,98 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
    * Aquí configuramos los listeners para las conexiones entrantes del servidor WebSocket puro.
    */
   afterInit(wss: WebSocketServerInterface) {
-    this.logger.log('WebSocket Gateway Inicializado (WS puro).');
+    this.logger.log('🚀 WebSocket Gateway Inicializado (WS puro) - Railway Mode');
     
     // El WsAdapter de NestJS se encarga de llamar a este 'connection' handler cuando un nuevo cliente se conecta.
     this.wss.on('connection', async (ws: WebSocket, request: any) => {
+      this.logger.log('🔌 Nueva conexión WebSocket recibida');
+      
       // Esperar el primer mensaje con el token JWT
       ws.once('message', async (data) => {
+        this.logger.log('📨 Mensaje recibido para autenticación');
+        
         try {
+          // 🔍 Paso 1: Parsear mensaje
+          this.logger.log(`🔍 Parseando datos: ${data.toString()}`);
           const { token } = JSON.parse(data.toString());
-          const payload = this.jwtService.verify(token);
-          // Buscar usuario en la base de datos
-          const user = await this.usersService.findOneById(payload.sub);
-          if (!user) {
+          
+          if (!token) {
+            this.logger.error('❌ No se encontró token en el mensaje');
             ws.close();
             return;
           }
+
+          // 🔍 Paso 2: Verificar JWT
+          this.logger.log('🔐 Verificando JWT token...');
+          const payload = this.jwtService.verify(token);
+          this.logger.log(`✅ JWT verificado. Payload: ${JSON.stringify(payload)}`);
+          
+          // 🔍 Paso 3: Buscar usuario
+          this.logger.log(`👤 Buscando usuario con ID: ${payload.sub}`);
+          const user = await this.usersService.findOneById(payload.sub);
+          
+          if (!user) {
+            this.logger.error(`❌ Usuario no encontrado con ID: ${payload.sub}`);
+            ws.close();
+            return;
+          }
+
+          this.logger.log(`✅ Usuario encontrado: ${user.nombre} (${user.email})`);
+          this.logger.log(`📋 Rol: ${user.role?.nombre || 'sin_rol'}`);
+          this.logger.log(`🏢 Área: ${user.area?.nombre || 'sin_área'}`);
+
+          // 🔍 Paso 4: Registrar cliente
           const clientId = request.headers['sec-websocket-key'] || Date.now().toString();
           const userRole = user.role?.nombre || 'sin_rol';
           this.clients.set(clientId, { ws, userId: user.id, rol: userRole, areaId: user.areaId });
-          this.logger.log(`Cliente autenticado: ${user.nombre} (${userRole})`);
+          
+          this.logger.log(`🎉 Cliente autenticado exitosamente: ${user.nombre} (${userRole})`);
+          
+          // Enviar confirmación de autenticación
+          ws.send(JSON.stringify({
+            event: 'authenticated',
+            message: `Bienvenido ${user.nombre}! Conectado como ${userRole}`,
+            user: {
+              id: user.id,
+              nombre: user.nombre,
+              rol: userRole,
+              area: user.area?.nombre
+            }
+          }));
+
           this.emitConnectedUsers();
 
           ws.on('close', () => {
             this.clients.delete(clientId);
             this.emitConnectedUsers();
-            this.logger.log(`Cliente desconectado: ${user.nombre} (${userRole})`);
+            this.logger.log(`👋 Cliente desconectado: ${user.nombre} (${userRole})`);
           });
 
           ws.on('error', (error: Error) => {
-            this.logger.error(`Error en cliente WS ${clientId}: ${error.message}`);
+            this.logger.error(`💥 Error en cliente WS ${clientId}: ${error.message}`);
           });
-        } catch (e) {
-          ws.close();
+
+        } catch (error) {
+          this.logger.error(`💥 ERROR EN AUTENTICACIÓN WEBSOCKET:`);
+          this.logger.error(`🔍 Error tipo: ${error.constructor.name}`);
+          this.logger.error(`📝 Error mensaje: ${error.message}`);
+          this.logger.error(`📍 Error stack: ${error.stack}`);
+          
+          // Enviar mensaje de error al cliente antes de cerrar
+          try {
+            ws.send(JSON.stringify({
+              event: 'authError',
+              message: `Error de autenticación: ${error.message}`,
+              error: error.constructor.name
+            }));
+          } catch (sendError) {
+            this.logger.error(`💥 Error enviando mensaje de error: ${sendError.message}`);
+          }
+          
+          // Cerrar conexión después de un pequeño delay
+          setTimeout(() => {
+            ws.close();
+          }, 100);
         }
       });
     });
@@ -86,63 +146,62 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   handleDisconnect(client: WebSocket) {}
 
   /**
-   * Emitir la lista filtrada de conectados a cada cliente
+   * Emite la lista de usuarios conectados a todos los clientes.
    */
   emitConnectedUsers() {
-    this.clients.forEach((info, clientId) => {
-      let lista: any[] = [];
-      if (info.rol === 'supervisor') {
-        // Supervisores ven todos los técnicos conectados
-        lista = Array.from(this.clients.values())
-          .filter(c => c.rol === 'tecnico')
-          .map(c => ({ userId: c.userId, areaId: c.areaId }));
-      } else if (info.rol === 'tecnico') {
-        // Técnicos ven supervisores de su área
-        lista = Array.from(this.clients.values())
-          .filter(c => c.rol === 'supervisor' && c.areaId === info.areaId)
-          .map(c => ({ userId: c.userId, areaId: c.areaId }));
-      }
+    const users = Array.from(this.clients.values()).map(info => ({
+      userId: info.userId,
+      rol: info.rol,
+      areaId: info.areaId
+    }));
+
+    this.logger.log(`👥 Emitiendo lista de usuarios conectados: ${users.length} usuarios`);
+
+    this.clients.forEach((info) => {
       if (info.ws.readyState === WebSocket.OPEN) {
-        info.ws.send(JSON.stringify({ event: 'connectedUsers', users: lista }));
+        info.ws.send(JSON.stringify({
+          event: 'connectedUsers',
+          users: users
+        }));
       }
     });
   }
 
   /**
-   * Maneja los mensajes enviados por los clientes al servidor a través del evento 'messageToServer'.
-   * Este método es activado por el decorador @SubscribeMessage('messageToServer').
+   * Maneja mensajes entrantes de clientes WebSocket.
    * @param client El objeto WebSocket del cliente que envió el mensaje.
-   * @param data El cuerpo del mensaje enviado por el cliente.
+   * @param data El contenido del mensaje enviado por el cliente.
    */
   @SubscribeMessage('messageToServer')
   handleMessage(client: WebSocket, @MessageBody() data: any): void {
-    this.logger.log(`Mensaje recibido de cliente WS (${client.readyState === WebSocket.OPEN ? 'abierto' : 'cerrado'}): ${JSON.stringify(data)}`);
-    
-    // Envía una respuesta de vuelta solo a ese cliente específico.
+    this.logger.log(`📨 Mensaje recibido de cliente WS (${client.readyState === WebSocket.OPEN ? 'abierto' : 'cerrado'}): ${JSON.stringify(data)}`);
+
+    // Responder al cliente con un eco del mensaje
     if (client.readyState === WebSocket.OPEN) {
-      client.send(JSON.stringify({ event: 'messageToClient', data: `Servidor recibió tu mensaje: ${data.text || data}` }));
+      client.send(JSON.stringify({ event: 'messageToClient', data: `Eco del servidor: ${JSON.stringify(data)}` }));
     }
   }
 
   /**
    * Envía una notificación de permiso a todos los clientes WebSocket conectados.
-   * Este método es llamado por EventsService.
-   * @param permiso El objeto permiso completo (populado) que se envía en la notificación.
-   * @param type El tipo de evento ('nuevo' o 'actualizado').
-   * @param customMessage El mensaje personalizado que se mostrará en la notificación.
+   * @param permiso El objeto del permiso que se ha creado o actualizado.
+   * @param type El tipo de notificación ('nuevo' o 'actualizado').
+   * @param customMessage El mensaje personalizado a enviar.
    */
   sendPermisoNotification(permiso: any, type: 'nuevo' | 'actualizado', customMessage: string) { // <-- ¡Ahora recibe customMessage!
-    const notificationPayload = {
-      event: 'permisoNotification', // Nombre del evento que el cliente debe escuchar
-      type: type,
-      permiso: permiso, // Objeto permiso completo
-      message: customMessage, // <-- El mensaje personalizado se incluye aquí
-    };
+    const message = customMessage; // Usa el mensaje personalizado
+    
+    this.logger.log(`🔔 Enviando notificación de permiso ${type}: ${message}`);
+    this.logger.log(`📋 Detalles del permiso: ID=${permiso.id}, Estado=${permiso.estado}`);
 
-    // Itera sobre todos los clientes conectados y les envía el payload.
     this.clients.forEach((info) => {
       if (info.ws.readyState === WebSocket.OPEN) { // Solo envía si la conexión está abierta
-        info.ws.send(JSON.stringify(notificationPayload));
+        info.ws.send(JSON.stringify({
+          event: 'permisoNotification',
+          message: message,
+          permiso: permiso,
+          type: type
+        }));
       }
     });
   }
