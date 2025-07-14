@@ -1,4 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { AppService } from './app.service';
 
 @Controller()
@@ -11,18 +12,28 @@ export class AppController {
   }
 
   @Get('health')
-  healthCheck(): { status: string; timestamp: string } {
-    return {
+  healthCheck(@Res() res: Response) {
+    res.status(200).json({
       status: 'ok',
       timestamp: new Date().toISOString(),
-    };
+      message: 'Backend is running',
+    });
   }
 
   @Get('api')
-  apiHealthCheck(): { status: string; message: string } {
-    return {
+  apiHealthCheck(@Res() res: Response) {
+    res.status(200).json({
       status: 'ok',
       message: 'API is running',
-    };
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  @Get('ping')
+  ping(@Res() res: Response) {
+    res.status(200).json({
+      pong: true,
+      timestamp: new Date().toISOString(),
+    });
   }
 }
