@@ -125,4 +125,4 @@ async function bootstrap() {
   console.log(`Application is running on: ${await app.getUrl()}`);
   console.log(`Swagger documentation is running on: ${await app.getUrl()}/api`);
 }
-bootstrap();
+bootstrap();// CORS configurado para Flutter web
