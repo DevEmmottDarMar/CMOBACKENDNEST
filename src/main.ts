@@ -98,6 +98,9 @@ async function bootstrap() {
     /^http:\/\/localhost:\d+$/, // Para cualquier puerto de localhost
     // IPs específicas necesarias
     'http://10.0.2.2:3000',     // Para el emulador de Android
+    // Dominios de Railway para producción
+    'https://cmowebfinal-production.up.railway.app',
+    /^https:\/\/.*\.up\.railway\.app$/, // Para cualquier subdominio de Railway
   ];
 
   app.enableCors({
