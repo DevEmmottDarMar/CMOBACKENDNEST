@@ -8,6 +8,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -27,6 +28,28 @@ import { User } from './entities/user.entity';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Obtener perfil del usuario autenticado',
+    description: 'Retorna el perfil completo del usuario autenticado actual con sus relaciones'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Perfil del usuario obtenido exitosamente',
+    type: User
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autorizado - Token JWT requerido o inválido'
+  })
+  async getProfile(@Req() req: any) {
+    // El usuario autenticado está disponible en req.user gracias al JwtAuthGuard
+    const userId = req.user.id;
+    return this.usersService.findOne(userId);
+  }
 
   @Post()
   @ApiOperation({
