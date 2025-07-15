@@ -1,28 +1,33 @@
 // src/events/events.gateway.ts
 import {
   WebSocketGateway,
+  WebSocketServer,
   SubscribeMessage,
   MessageBody,
-  WebSocketServer, // Decorador de NestJS para inyectar la instancia del servidor WebSocket
-  OnGatewayConnection, // Interfaz para manejar conexiones (lógica en afterInit para WS puros)
-  OnGatewayDisconnect, // Interfaz para manejar desconexiones (lógica en afterInit para WS puros)
-  OnGatewayInit,       // Interfaz para inicializar el gateway (aquí se configura el servidor WS)
-} from '@nestjs/websockets'; // Importa de @nestjs/websockets (para el adaptador WS puro)
-
+  OnGatewayInit,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
-import { Server as WebSocketServerInterface, WebSocket } from 'ws'; // Importa los tipos 'Server' y 'WebSocket' de la librería 'ws'
+import { WebSocket, WebSocketServer as WebSocketServerInterface } from 'ws';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 import { Injectable } from '@nestjs/common';
 
+export enum ConnectionStatus {
+  connecting = 'connecting',
+  connected = 'connected',
+  disconnected = 'disconnected',
+}
+
 @Injectable()
 @WebSocketGateway() // Este decorador marca la clase como un gateway WebSocket. Por defecto, escuchará en el mismo puerto HTTP (3000).
 export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() private wss: WebSocketServerInterface; // Inyecta la instancia del servidor WebSocket (la librería 'ws')
-
+  
   private logger: Logger = new Logger('EventsGateway');
-  // Mapa para mantener info extendida de los clientes conectados
+  
   private clients: Map<string, { 
     ws: WebSocket, 
     userId: string, 
@@ -60,46 +65,37 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         if (urlToken) {
           token = urlToken;
           this.logger.log('🔍 Token obtenido de URL');
+          await this.authenticateClient(ws, request, token);
         } else {
           // Si no hay token en URL, esperar el primer mensaje
           this.logger.log('📨 Esperando mensaje con token...');
           
-          return new Promise<void>((resolve, reject) => {
-            ws.once('message', async (data) => {
-              try {
-                this.logger.log('📨 Mensaje recibido para autenticación');
-                const messageData = JSON.parse(data.toString());
-                token = messageData.token;
-                
-                if (!token) {
-                  this.logger.error('❌ No se encontró token en el mensaje');
-                  ws.close();
-                  reject(new Error('No se encontró token'));
-                  return;
-                }
-                
-                await this.authenticateClient(ws, request, token);
-                resolve();
-              } catch (error) {
-                this.logger.error('❌ Error procesando mensaje de autenticación:', error);
-                ws.close();
-                reject(error);
-              }
-            });
-            
-            // Timeout para evitar esperar indefinidamente
-            setTimeout(() => {
+          ws.once('message', async (data) => {
+            try {
+              this.logger.log('📨 Mensaje recibido para autenticación');
+              const messageData = JSON.parse(data.toString());
+              token = messageData.token;
+              
               if (!token) {
-                this.logger.error('❌ Timeout esperando token');
+                this.logger.error('❌ No se encontró token en el mensaje');
                 ws.close();
-                reject(new Error('Timeout esperando token'));
+                return;
               }
-            }, 10000);
+              
+              await this.authenticateClient(ws, request, token);
+            } catch (error) {
+              this.logger.error('❌ Error procesando mensaje de autenticación:', error);
+              ws.close();
+            }
           });
-        }
-        
-        if (token) {
-          await this.authenticateClient(ws, request, token);
+          
+          // Timeout para evitar esperar indefinidamente
+          setTimeout(() => {
+            if (!token) {
+              this.logger.error('❌ Timeout esperando token');
+              ws.close();
+            }
+          }, 10000);
         }
         
       } catch (error) {
@@ -114,92 +110,89 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
    */
   private async authenticateClient(ws: WebSocket, request: any, token: string) {
     try {
-
-          // 🔍 Paso 2: Verificar JWT
-          this.logger.log('🔐 Verificando JWT token...');
-          const payload = this.jwtService.verify(token);
-          this.logger.log(`✅ JWT verificado. Payload: ${JSON.stringify(payload)}`);
-          
-          // 🔍 Paso 3: Buscar usuario
-          this.logger.log(`👤 Buscando usuario con ID: ${payload.sub}`);
-          const user = await this.usersService.findOneById(payload.sub);
-          
-          if (!user) {
-            this.logger.error(`❌ Usuario no encontrado con ID: ${payload.sub}`);
-            ws.close();
-            return;
-          }
-
-          this.logger.log(`✅ Usuario encontrado: ${user.nombre} (${user.email})`);
-          this.logger.log(`📋 Rol: ${user.role?.nombre || 'sin_rol'}`);
-          this.logger.log(`🏢 Área: ${user.area?.nombre || 'sin_área'}`);
-
-          // 🔍 Paso 4: Registrar cliente
-          const clientId = request.headers['sec-websocket-key'] || Date.now().toString();
-          const userRole = user.role?.nombre || 'sin_rol';
-          this.clients.set(clientId, { 
-            ws, 
-            userId: user.id, 
-            rol: userRole, 
-            areaId: user.areaId,
-            nombre: user.nombre,
-            email: user.email,
-            area: user.area ? { id: user.area.id, nombre: user.area.nombre } : undefined
-          });
-          
-          this.logger.log(`🎉 Cliente autenticado exitosamente: ${user.nombre} (${userRole})`);
-          
-          // Enviar confirmación de autenticación
-          ws.send(JSON.stringify({
-            event: 'authenticated',
-            message: `Bienvenido ${user.nombre}! Conectado como ${userRole}`,
-            user: {
-              id: user.id,
-              nombre: user.nombre,
-              rol: userRole,
-              area: user.area?.nombre
-            }
-          }));
-
-          this.emitConnectedUsers();
-          
-          // Notificar a todos los clientes sobre el nuevo usuario conectado
-          this.notifyUserConnected(user, userRole);
-
-          ws.on('close', () => {
-            this.clients.delete(clientId);
-            this.emitConnectedUsers();
-            this.logger.log(`👋 Cliente desconectado: ${user.nombre} (${userRole})`);
-          });
-
-          ws.on('error', (error: Error) => {
-            this.logger.error(`💥 Error en cliente WS ${clientId}: ${error.message}`);
-          });
-
-        } catch (error) {
-          this.logger.error(`💥 ERROR EN AUTENTICACIÓN WEBSOCKET:`);
-          this.logger.error(`🔍 Error tipo: ${error.constructor.name}`);
-          this.logger.error(`📝 Error mensaje: ${error.message}`);
-          this.logger.error(`📍 Error stack: ${error.stack}`);
-          
-          // Enviar mensaje de error al cliente antes de cerrar
-          try {
-            ws.send(JSON.stringify({
-              event: 'authError',
-              message: `Error de autenticación: ${error.message}`,
-              error: error.constructor.name
-            }));
-          } catch (sendError) {
-            this.logger.error(`💥 Error enviando mensaje de error: ${sendError.message}`);
-          }
-          
-          // Cerrar conexión después de un pequeño delay
-          setTimeout(() => {
-            ws.close();
-          }, 100);
-        }
+      // 🔍 Paso 2: Verificar JWT
+      this.logger.log('🔐 Verificando JWT token...');
+      const payload = this.jwtService.verify(token);
+      this.logger.log(`✅ JWT verificado. Payload: ${JSON.stringify(payload)}`);
+      
+      // 🔍 Paso 3: Buscar usuario
+      this.logger.log(`👤 Buscando usuario con ID: ${payload.sub}`);
+      const user = await this.usersService.findOneById(payload.sub);
+      
+      if (!user) {
+        this.logger.error(`❌ Usuario no encontrado con ID: ${payload.sub}`);
+        ws.close();
+        return;
       }
-    });
+
+      this.logger.log(`✅ Usuario encontrado: ${user.nombre} (${user.email})`);
+      this.logger.log(`📋 Rol: ${user.role?.nombre || 'sin_rol'}`);
+      this.logger.log(`🏢 Área: ${user.area?.nombre || 'sin_área'}`);
+
+      // 🔍 Paso 4: Registrar cliente
+      const clientId = request.headers['sec-websocket-key'] || Date.now().toString();
+      const userRole = user.role?.nombre || 'sin_rol';
+      this.clients.set(clientId, { 
+        ws, 
+        userId: user.id, 
+        rol: userRole, 
+        areaId: user.areaId,
+        nombre: user.nombre,
+        email: user.email,
+        area: user.area ? { id: user.area.id, nombre: user.area.nombre } : undefined
+      });
+      
+      this.logger.log(`🎉 Cliente autenticado exitosamente: ${user.nombre} (${userRole})`);
+      
+      // Enviar confirmación de autenticación
+      ws.send(JSON.stringify({
+        event: 'authenticated',
+        message: `Bienvenido ${user.nombre}! Conectado como ${userRole}`,
+        user: {
+          id: user.id,
+          nombre: user.nombre,
+          rol: userRole,
+          area: user.area?.nombre
+        }
+      }));
+
+      this.emitConnectedUsers();
+      
+      // Notificar a todos los clientes sobre el nuevo usuario conectado
+      this.notifyUserConnected(user, userRole);
+
+      ws.on('close', () => {
+        this.clients.delete(clientId);
+        this.emitConnectedUsers();
+        this.logger.log(`👋 Cliente desconectado: ${user.nombre} (${userRole})`);
+      });
+
+      ws.on('error', (error: Error) => {
+        this.logger.error(`💥 Error en cliente WS ${clientId}: ${error.message}`);
+      });
+
+    } catch (error) {
+      this.logger.error(`💥 ERROR EN AUTENTICACIÓN WEBSOCKET:`);
+      this.logger.error(`🔍 Error tipo: ${error.constructor.name}`);
+      this.logger.error(`📝 Error mensaje: ${error.message}`);
+      this.logger.error(`📍 Error stack: ${error.stack}`);
+      
+      // Enviar mensaje de error al cliente antes de cerrar
+      try {
+        ws.send(JSON.stringify({
+          event: 'authError',
+          message: `Error de autenticación: ${error.message}`,
+          error: error.constructor.name
+        }));
+      } catch (sendError) {
+        this.logger.error(`💥 Error enviando mensaje de error: ${sendError.message}`);
+      }
+      
+      // Cerrar conexión después de un pequeño delay
+      setTimeout(() => {
+        ws.close();
+      }, 100);
+    }
   }
 
   /**
