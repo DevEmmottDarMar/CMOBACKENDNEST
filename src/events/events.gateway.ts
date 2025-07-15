@@ -49,20 +49,71 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     this.wss.on('connection', async (ws: WebSocket, request: any) => {
       this.logger.log('🔌 Nueva conexión WebSocket recibida');
       
-      // Esperar el primer mensaje con el token JWT
-      ws.once('message', async (data) => {
-        this.logger.log('📨 Mensaje recibido para autenticación');
+      try {
+        // 🔍 Paso 1: Obtener token de la URL o del primer mensaje
+        let token: string | null = null;
         
-        try {
-          // 🔍 Paso 1: Parsear mensaje
-          this.logger.log(`🔍 Parseando datos: ${data.toString()}`);
-          const { token } = JSON.parse(data.toString());
+        // Intentar obtener token de la URL primero
+        const url = new URL(request.url, 'http://localhost');
+        const urlToken = url.searchParams.get('token');
+        
+        if (urlToken) {
+          token = urlToken;
+          this.logger.log('🔍 Token obtenido de URL');
+        } else {
+          // Si no hay token en URL, esperar el primer mensaje
+          this.logger.log('📨 Esperando mensaje con token...');
           
-          if (!token) {
-            this.logger.error('❌ No se encontró token en el mensaje');
-            ws.close();
-            return;
-          }
+          return new Promise<void>((resolve, reject) => {
+            ws.once('message', async (data) => {
+              try {
+                this.logger.log('📨 Mensaje recibido para autenticación');
+                const messageData = JSON.parse(data.toString());
+                token = messageData.token;
+                
+                if (!token) {
+                  this.logger.error('❌ No se encontró token en el mensaje');
+                  ws.close();
+                  reject(new Error('No se encontró token'));
+                  return;
+                }
+                
+                await this.authenticateClient(ws, request, token);
+                resolve();
+              } catch (error) {
+                this.logger.error('❌ Error procesando mensaje de autenticación:', error);
+                ws.close();
+                reject(error);
+              }
+            });
+            
+            // Timeout para evitar esperar indefinidamente
+            setTimeout(() => {
+              if (!token) {
+                this.logger.error('❌ Timeout esperando token');
+                ws.close();
+                reject(new Error('Timeout esperando token'));
+              }
+            }, 10000);
+          });
+        }
+        
+        if (token) {
+          await this.authenticateClient(ws, request, token);
+        }
+        
+      } catch (error) {
+        this.logger.error('❌ Error en conexión WebSocket:', error);
+        ws.close();
+      }
+    });
+  }
+
+  /**
+   * Autentica un cliente WebSocket
+   */
+  private async authenticateClient(ws: WebSocket, request: any, token: string) {
+    try {
 
           // 🔍 Paso 2: Verificar JWT
           this.logger.log('🔐 Verificando JWT token...');
@@ -147,7 +198,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
             ws.close();
           }, 100);
         }
-      });
+      }
     });
   }
 
