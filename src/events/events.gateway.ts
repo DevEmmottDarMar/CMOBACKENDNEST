@@ -28,9 +28,7 @@ export enum ConnectionStatus {
     methods: ['GET', 'POST'],
     credentials: true,
   },
-  transports: ['websocket', 'polling'],
-  namespace: '/ws',
-}) // Configuración específica para Railway
+}) // Configuración simplificada para Railway
 export class EventsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -68,10 +66,10 @@ export class EventsGateway
    */
   handleConnection(client: Socket, ...args: any[]) {
     this.logger.log('🔌 Nueva conexión WebSocket recibida');
-    
+
     // Obtener token de los query parameters
     const token = client.handshake.query.token as string;
-    
+
     if (token) {
       this.authenticateClient(client, token);
     } else {
@@ -85,7 +83,7 @@ export class EventsGateway
    */
   handleDisconnect(client: Socket) {
     this.logger.log('👋 Cliente desconectado');
-    
+
     // Remover cliente de la lista
     for (const [clientId, info] of this.clients.entries()) {
       if (info.socket.id === client.id) {
@@ -93,7 +91,7 @@ export class EventsGateway
         break;
       }
     }
-    
+
     this.emitConnectedUsers();
   }
 
@@ -155,7 +153,6 @@ export class EventsGateway
 
       // Notificar a todos los clientes sobre el nuevo usuario conectado
       this.notifyUserConnected(user, userRole);
-
     } catch (error) {
       this.logger.error(`💥 ERROR EN AUTENTICACIÓN WEBSOCKET:`);
       this.logger.error(`🔍 Error tipo: ${error.constructor.name}`);
@@ -201,9 +198,7 @@ export class EventsGateway
    */
   @SubscribeMessage('messageToServer')
   handleMessage(client: Socket, @MessageBody() data: any): void {
-    this.logger.log(
-      `📨 Mensaje recibido de cliente: ${JSON.stringify(data)}`,
-    );
+    this.logger.log(`📨 Mensaje recibido de cliente: ${JSON.stringify(data)}`);
 
     // Responder al cliente con un eco del mensaje
     client.emit('messageToClient', {
