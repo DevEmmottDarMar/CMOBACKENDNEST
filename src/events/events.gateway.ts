@@ -58,45 +58,49 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         // 🔍 Paso 1: Obtener token de la URL o del primer mensaje
         let token: string | null = null;
         
-        // Intentar obtener token de la URL primero
-        const url = new URL(request.url, 'http://localhost');
-        const urlToken = url.searchParams.get('token');
-        
-        if (urlToken) {
-          token = urlToken;
-          this.logger.log('🔍 Token obtenido de URL');
-          await this.authenticateClient(ws, request, token);
-        } else {
-          // Si no hay token en URL, esperar el primer mensaje
-          this.logger.log('📨 Esperando mensaje con token...');
+        try {
+          const url = new URL(request.url, 'http://localhost');
+          const urlToken = url.searchParams.get('token');
           
-          ws.once('message', async (data) => {
-            try {
-              this.logger.log('📨 Mensaje recibido para autenticación');
-              const messageData = JSON.parse(data.toString());
-              token = messageData.token;
-              
-              if (!token) {
-                this.logger.error('❌ No se encontró token en el mensaje');
-                ws.close();
-                return;
-              }
-              
-              await this.authenticateClient(ws, request, token);
-            } catch (error) {
-              this.logger.error('❌ Error procesando mensaje de autenticación:', error);
-              ws.close();
-            }
-          });
-          
-          // Timeout para evitar esperar indefinidamente
-          setTimeout(() => {
-            if (!token) {
-              this.logger.error('❌ Timeout esperando token');
-              ws.close();
-            }
-          }, 10000);
+          if (urlToken) {
+            token = urlToken;
+            this.logger.log('🔍 Token obtenido de URL');
+            await this.authenticateClient(ws, request, token);
+            return;
+          }
+        } catch (urlError) {
+          this.logger.log('🔍 No se pudo parsear URL, intentando mensaje');
         }
+        
+        // Si no hay token en URL, esperar el primer mensaje
+        this.logger.log('📨 Esperando mensaje con token...');
+        
+        ws.once('message', async (data) => {
+          try {
+            this.logger.log('📨 Mensaje recibido para autenticación');
+            const messageData = JSON.parse(data.toString());
+            token = messageData.token;
+            
+            if (!token) {
+              this.logger.error('❌ No se encontró token en el mensaje');
+              ws.close();
+              return;
+            }
+            
+            await this.authenticateClient(ws, request, token);
+          } catch (error) {
+            this.logger.error('❌ Error procesando mensaje de autenticación:', error);
+            ws.close();
+          }
+        });
+        
+        // Timeout para evitar esperar indefinidamente
+        setTimeout(() => {
+          if (!token) {
+            this.logger.error('❌ Timeout esperando token');
+            ws.close();
+          }
+        }, 10000);
         
       } catch (error) {
         this.logger.error('❌ Error en conexión WebSocket:', error);
