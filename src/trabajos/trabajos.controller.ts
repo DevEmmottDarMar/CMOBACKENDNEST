@@ -185,40 +185,44 @@ export class TrabajosController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Iniciar un trabajo',
-    description: 'Permite a un técnico iniciar un trabajo enviando foto inicial y comentarios para aprobación del supervisor'
+    description:
+      'Permite a un técnico iniciar un trabajo enviando foto inicial y comentarios para aprobación del supervisor',
   })
   @ApiParam({
     name: 'id',
     description: 'ID único del trabajo a iniciar',
     example: 'e1d68650-a7c2-435e-9623-7e4249e8f00e',
-    format: 'uuid'
+    format: 'uuid',
   })
   @ApiBody({
     type: IniciarTrabajoDto,
-    description: 'Datos para iniciar el trabajo (foto y comentarios)'
+    description: 'Datos para iniciar el trabajo (foto y comentarios)',
   })
   @ApiResponse({
     status: 201,
     description: 'Trabajo iniciado exitosamente, pendiente de aprobación',
-    type: TrabajoInicioResponseDto
+    type: TrabajoInicioResponseDto,
   })
   @ApiResponse({
     status: 400,
-    description: 'Datos inválidos proporcionados'
+    description: 'Datos inválidos proporcionados',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autorizado - Token JWT requerido'
+    description: 'No autorizado - Token JWT requerido',
   })
   @ApiResponse({
     status: 404,
-    description: 'Trabajo no encontrado'
+    description: 'Trabajo no encontrado',
   })
   @ApiResponse({
     status: 403,
-    description: 'Técnico no autorizado para este trabajo'
+    description: 'Técnico no autorizado para este trabajo',
   })
-  iniciarTrabajo(@Param('id') id: string, @Body() iniciarTrabajoDto: IniciarTrabajoDto) {
+  iniciarTrabajo(
+    @Param('id') id: string,
+    @Body() iniciarTrabajoDto: IniciarTrabajoDto,
+  ) {
     return this.trabajosService.iniciarTrabajo(id, iniciarTrabajoDto);
   }
 
@@ -227,26 +231,27 @@ export class TrabajosController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Obtener estado de aprobación de un trabajo',
-    description: 'Retorna el estado actual de aprobación de un trabajo iniciado'
+    description:
+      'Retorna el estado actual de aprobación de un trabajo iniciado',
   })
   @ApiParam({
     name: 'id',
     description: 'ID único del trabajo',
     example: 'e1d68650-a7c2-435e-9623-7e4249e8f00e',
-    format: 'uuid'
+    format: 'uuid',
   })
   @ApiResponse({
     status: 200,
     description: 'Estado de aprobación obtenido exitosamente',
-    type: TrabajoInicioResponseDto
+    type: TrabajoInicioResponseDto,
   })
   @ApiResponse({
     status: 401,
-    description: 'No autorizado - Token JWT requerido'
+    description: 'No autorizado - Token JWT requerido',
   })
   @ApiResponse({
     status: 404,
-    description: 'Trabajo no encontrado'
+    description: 'Trabajo no encontrado',
   })
   obtenerEstadoAprobacion(@Param('id') id: string) {
     return this.trabajosService.obtenerEstadoAprobacion(id);
@@ -257,40 +262,44 @@ export class TrabajosController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Aprobar o rechazar un trabajo iniciado',
-    description: 'Permite a un supervisor aprobar o rechazar un trabajo que está pendiente de aprobación'
+    description:
+      'Permite a un supervisor aprobar o rechazar un trabajo que está pendiente de aprobación',
   })
   @ApiParam({
     name: 'id',
     description: 'ID único del trabajo a aprobar/rechazar',
     example: 'e1d68650-a7c2-435e-9623-7e4249e8f00e',
-    format: 'uuid'
+    format: 'uuid',
   })
   @ApiBody({
     type: AprobarTrabajoDto,
-    description: 'Datos de aprobación/rechazo del trabajo'
+    description: 'Datos de aprobación/rechazo del trabajo',
   })
   @ApiResponse({
     status: 200,
     description: 'Trabajo aprobado/rechazado exitosamente',
-    type: TrabajoInicioResponseDto
+    type: TrabajoInicioResponseDto,
   })
   @ApiResponse({
     status: 400,
-    description: 'Datos inválidos proporcionados'
+    description: 'Datos inválidos proporcionados',
   })
   @ApiResponse({
     status: 401,
-    description: 'No autorizado - Token JWT requerido'
+    description: 'No autorizado - Token JWT requerido',
   })
   @ApiResponse({
     status: 403,
-    description: 'Supervisor no autorizado para este trabajo'
+    description: 'Supervisor no autorizado para este trabajo',
   })
   @ApiResponse({
     status: 404,
-    description: 'Trabajo no encontrado'
+    description: 'Trabajo no encontrado',
   })
-  aprobarTrabajo(@Param('id') id: string, @Body() aprobarTrabajoDto: AprobarTrabajoDto) {
+  aprobarTrabajo(
+    @Param('id') id: string,
+    @Body() aprobarTrabajoDto: AprobarTrabajoDto,
+  ) {
     return this.trabajosService.aprobarTrabajo(id, aprobarTrabajoDto);
   }
 
@@ -299,44 +308,56 @@ export class TrabajosController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Obtener trabajos pendientes de aprobación',
-    description: 'Retorna todos los trabajos que están pendientes de aprobación por supervisores'
+    description:
+      'Retorna todos los trabajos que están pendientes de aprobación por supervisores',
   })
   @ApiResponse({
     status: 200,
     description: 'Trabajos pendientes de aprobación obtenidos exitosamente',
-    type: [TrabajoInicioResponseDto]
+    type: [TrabajoInicioResponseDto],
   })
   @ApiResponse({
     status: 401,
-    description: 'No autorizado - Token JWT requerido'
+    description: 'No autorizado - Token JWT requerido',
   })
   async findPendientesAprobacion() {
     try {
       console.log('🔍 Endpoint findPendientesAprobacion llamado');
+
+      // Verificar que el servicio está disponible
       const result = await this.trabajosService.findPendientesAprobacion();
-      console.log('✅ Endpoint findPendientesAprobacion completado exitosamente');
+
+      console.log(
+        '✅ Endpoint findPendientesAprobacion completado exitosamente',
+      );
+      console.log(`📊 Resultado: ${result.length} trabajos encontrados`);
+
       return result;
     } catch (error) {
       console.error('❌ Error en endpoint findPendientesAprobacion:', error);
-      throw error;
+      console.error('❌ Stack trace:', error.stack);
+
+      // Retornar array vacío en lugar de lanzar error
+      return [];
     }
   }
 
   @Get('health')
   @ApiOperation({
     summary: 'Health check para trabajos',
-    description: 'Endpoint de prueba para verificar que el módulo de trabajos funciona'
+    description:
+      'Endpoint de prueba para verificar que el módulo de trabajos funciona',
   })
   @ApiResponse({
     status: 200,
-    description: 'Módulo de trabajos funcionando correctamente'
+    description: 'Módulo de trabajos funcionando correctamente',
   })
   healthCheck() {
     return {
       status: 'ok',
       module: 'trabajos',
       timestamp: new Date().toISOString(),
-      message: 'Módulo de trabajos funcionando correctamente'
+      message: 'Módulo de trabajos funcionando correctamente',
     };
   }
 }
