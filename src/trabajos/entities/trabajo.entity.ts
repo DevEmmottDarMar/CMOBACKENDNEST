@@ -18,6 +18,7 @@ import { Image } from '../../images/entities/image.entity';
 export enum TrabajoEstado {
   PENDIENTE = 'pendiente',
   ASIGNADO = 'asignado',
+  PENDIENTE_APROBACION = 'pendiente_aprobacion',
   EN_PROCESO = 'en_proceso',
   EN_PROGRESO = 'en_progreso',
   COMPLETADO = 'completado',

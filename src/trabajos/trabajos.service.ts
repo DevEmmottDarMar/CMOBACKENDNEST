@@ -13,6 +13,9 @@ import {
 } from './entities/trabajo.entity';
 import { CreateTrabajoDto } from './dto/create-trabajo.dto';
 import { UpdateTrabajoDto } from './dto/update-trabajo.dto';
+import { IniciarTrabajoDto } from './dto/iniciar-trabajo.dto';
+import { TrabajoInicioResponseDto } from './dto/trabajo-inicio-response.dto';
+import { AprobarTrabajoDto } from './dto/aprobar-trabajo.dto';
 import { User } from '../users/entities/user.entity';
 import { Area } from '../areas/entities/area.entity';
 import { Role } from '../roles/entities/role.entity';
@@ -209,5 +212,181 @@ export class TrabajosService {
       throw new NotFoundException(`Trabajo con ID "${id}" no encontrado.`);
     }
     return { message: 'Trabajo eliminado exitosamente' };
+  }
+
+  async iniciarTrabajo(id: string, iniciarTrabajoDto: IniciarTrabajoDto): Promise<TrabajoInicioResponseDto> {
+    const { tecnicoId, fotoInicial, comentarios } = iniciarTrabajoDto;
+
+    // Verificar que el trabajo existe
+    const trabajo = await this.trabajosRepository.findOne({
+      where: { id },
+      relations: ['tecnicoAsignado', 'area']
+    });
+
+    if (!trabajo) {
+      throw new NotFoundException(`Trabajo con ID "${id}" no encontrado.`);
+    }
+
+    // Verificar que el técnico está asignado al trabajo
+    if (trabajo.tecnicoAsignadoId !== tecnicoId) {
+      throw new BadRequestException('No tienes autorización para iniciar este trabajo.');
+    }
+
+    // Verificar que el trabajo está en estado válido para iniciar
+    if (trabajo.estado !== TrabajoEstado.ASIGNADO && trabajo.estado !== TrabajoEstado.PENDIENTE) {
+      throw new BadRequestException(`No se puede iniciar un trabajo en estado "${trabajo.estado}".`);
+    }
+
+    // Verificar que el técnico existe y tiene rol correcto
+    const tecnico = await this.usersRepository.findOne({
+      where: { id: tecnicoId },
+      relations: ['role']
+    });
+
+    if (!tecnico || tecnico.role?.nombre !== 'tecnico') {
+      throw new BadRequestException('Técnico no válido o rol incorrecto.');
+    }
+
+    // Guardar la foto en el sistema de archivos o S3
+    // TODO: Implementar guardado de imagen
+    const fotoUrl = await this.guardarFoto(fotoInicial, trabajo.id);
+
+    // Actualizar el trabajo
+    trabajo.estado = TrabajoEstado.PENDIENTE_APROBACION;
+    trabajo.fechaInicioReal = new Date();
+    trabajo.comentarios = comentarios || trabajo.comentarios;
+    
+    // Guardar la URL de la foto en comentarios adicionales
+    const comentariosConFoto = `${trabajo.comentarios || ''}\n\n📸 Foto inicial: ${fotoUrl}`;
+    trabajo.comentarios = comentariosConFoto;
+
+    const trabajoActualizado = await this.trabajosRepository.save(trabajo);
+
+    // TODO: Enviar notificación al supervisor via WebSocket
+    await this.notificarSupervisor(trabajoActualizado);
+
+    return {
+      id: trabajoActualizado.id,
+      titulo: trabajoActualizado.titulo || 'Trabajo sin título',
+      estado: trabajoActualizado.estado,
+      estaAprobado: false,
+      estaRechazado: false,
+      fechaSolicitud: trabajoActualizado.fechaInicioReal!,
+      comentarios: trabajoActualizado.comentarios
+    };
+  }
+
+  async obtenerEstadoAprobacion(id: string): Promise<TrabajoInicioResponseDto> {
+    const trabajo = await this.trabajosRepository.findOne({
+      where: { id },
+      relations: ['tecnicoAsignado', 'area']
+    });
+
+    if (!trabajo) {
+      throw new NotFoundException(`Trabajo con ID "${id}" no encontrado.`);
+    }
+
+    const estaAprobado = trabajo.estado === TrabajoEstado.EN_PROCESO || trabajo.estado === TrabajoEstado.EN_PROGRESO;
+    const estaRechazado = trabajo.estado === TrabajoEstado.CANCELADO;
+
+    return {
+      id: trabajo.id,
+      titulo: trabajo.titulo || 'Trabajo sin título',
+      estado: trabajo.estado,
+      estaAprobado,
+      estaRechazado,
+      motivoRechazo: estaRechazado ? trabajo.comentarios : undefined,
+      fechaSolicitud: trabajo.fechaInicioReal!,
+      comentarios: trabajo.comentarios
+    };
+  }
+
+  private async guardarFoto(fotoBase64: string, trabajoId: string): Promise<string> {
+    // TODO: Implementar guardado real de imagen
+    // Por ahora retornamos una URL temporal
+    return `https://example.com/fotos/${trabajoId}/${Date.now()}.jpg`;
+  }
+
+  private async notificarSupervisor(trabajo: Trabajo): Promise<void> {
+    // TODO: Implementar notificación real via WebSocket
+    console.log(`🔔 Notificación: Trabajo ${trabajo.id} iniciado por técnico ${trabajo.tecnicoAsignadoId}, pendiente de aprobación`);
+  }
+
+  async aprobarTrabajo(id: string, aprobarTrabajoDto: AprobarTrabajoDto): Promise<TrabajoInicioResponseDto> {
+    const { supervisorId, aprobado, comentarios } = aprobarTrabajoDto;
+
+    // Verificar que el trabajo existe
+    const trabajo = await this.trabajosRepository.findOne({
+      where: { id },
+      relations: ['tecnicoAsignado', 'area']
+    });
+
+    if (!trabajo) {
+      throw new NotFoundException(`Trabajo con ID "${id}" no encontrado.`);
+    }
+
+    // Verificar que el trabajo está pendiente de aprobación
+    if (trabajo.estado !== TrabajoEstado.PENDIENTE_APROBACION) {
+      throw new BadRequestException(`No se puede aprobar/rechazar un trabajo en estado "${trabajo.estado}".`);
+    }
+
+    // Verificar que el supervisor existe y tiene rol correcto
+    const supervisor = await this.usersRepository.findOne({
+      where: { id: supervisorId },
+      relations: ['role']
+    });
+
+    if (!supervisor || supervisor.role?.nombre !== 'supervisor') {
+      throw new BadRequestException('Supervisor no válido o rol incorrecto.');
+    }
+
+    // Actualizar el trabajo según la decisión
+    if (aprobado) {
+      trabajo.estado = TrabajoEstado.EN_PROCESO;
+      trabajo.comentarios = `${trabajo.comentarios || ''}\n\n✅ Aprobado por supervisor ${supervisor.nombre} - ${new Date().toISOString()}\n${comentarios || ''}`;
+    } else {
+      trabajo.estado = TrabajoEstado.CANCELADO;
+      trabajo.comentarios = `${trabajo.comentarios || ''}\n\n❌ Rechazado por supervisor ${supervisor.nombre} - ${new Date().toISOString()}\nMotivo: ${comentarios || 'Sin motivo especificado'}`;
+    }
+
+    const trabajoActualizado = await this.trabajosRepository.save(trabajo);
+
+    // TODO: Enviar notificación al técnico via WebSocket
+    await this.notificarTecnico(trabajoActualizado, aprobado);
+
+    return {
+      id: trabajoActualizado.id,
+      titulo: trabajoActualizado.titulo || 'Trabajo sin título',
+      estado: trabajoActualizado.estado,
+      estaAprobado: aprobado,
+      estaRechazado: !aprobado,
+      motivoRechazo: !aprobado ? comentarios : undefined,
+      fechaSolicitud: trabajoActualizado.fechaInicioReal!,
+      comentarios: trabajoActualizado.comentarios
+    };
+  }
+
+  private async notificarTecnico(trabajo: Trabajo, aprobado: boolean): Promise<void> {
+    // TODO: Implementar notificación real via WebSocket
+    const estado = aprobado ? 'APROBADO' : 'RECHAZADO';
+    console.log(`🔔 Notificación: Trabajo ${trabajo.id} ${estado} por supervisor. Técnico: ${trabajo.tecnicoAsignadoId}`);
+  }
+
+  async findPendientesAprobacion(): Promise<TrabajoInicioResponseDto[]> {
+    const trabajos = await this.trabajosRepository.find({
+      where: { estado: TrabajoEstado.PENDIENTE_APROBACION },
+      relations: ['tecnicoAsignado', 'area'],
+      order: { fechaInicioReal: 'ASC' }
+    });
+
+    return trabajos.map(trabajo => ({
+      id: trabajo.id,
+      titulo: trabajo.titulo || 'Trabajo sin título',
+      estado: trabajo.estado,
+      estaAprobado: false,
+      estaRechazado: false,
+      fechaSolicitud: trabajo.fechaInicioReal!,
+      comentarios: trabajo.comentarios
+    }));
   }
 }
