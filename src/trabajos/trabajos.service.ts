@@ -430,7 +430,7 @@ export class TrabajosService {
       
       // Método simplificado para evitar errores
       const trabajos = await this.trabajosRepository.find({
-        where: { estado: 'pendiente_aprobacion' },
+        where: { estado: TrabajoEstado.PENDIENTE_APROBACION },
         order: { fechaInicioReal: 'ASC' }
       });
 
