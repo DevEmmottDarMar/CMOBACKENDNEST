@@ -83,6 +83,46 @@ export class TrabajosController {
     return this.trabajosService.findAll();
   }
 
+  // MOVER AQUÍ EL ENDPOINT DE PENDIENTES-APROBACION
+  @Get('pendientes-aprobacion')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Obtener trabajos pendientes de aprobación',
+    description:
+      'Retorna todos los trabajos que están pendientes de aprobación por supervisores',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Trabajos pendientes de aprobación obtenidos exitosamente',
+    type: [TrabajoInicioResponseDto],
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autorizado - Token JWT requerido',
+  })
+  async findPendientesAprobacion() {
+    try {
+      console.log('🔍 Endpoint findPendientesAprobacion llamado');
+
+      // Verificar que el servicio está disponible
+      const result = await this.trabajosService.findPendientesAprobacion();
+
+      console.log(
+        '✅ Endpoint findPendientesAprobacion completado exitosamente',
+      );
+      console.log(`📊 Resultado: ${result.length} trabajos encontrados`);
+
+      return result;
+    } catch (error) {
+      console.error('❌ Error en endpoint findPendientesAprobacion:', error);
+      console.error('❌ Stack trace:', error.stack);
+
+      // Retornar array vacío en lugar de lanzar error
+      return [];
+    }
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -301,45 +341,6 @@ export class TrabajosController {
     @Body() aprobarTrabajoDto: AprobarTrabajoDto,
   ) {
     return this.trabajosService.aprobarTrabajo(id, aprobarTrabajoDto);
-  }
-
-  @Get('pendientes-aprobacion')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Obtener trabajos pendientes de aprobación',
-    description:
-      'Retorna todos los trabajos que están pendientes de aprobación por supervisores',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Trabajos pendientes de aprobación obtenidos exitosamente',
-    type: [TrabajoInicioResponseDto],
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'No autorizado - Token JWT requerido',
-  })
-  async findPendientesAprobacion() {
-    try {
-      console.log('🔍 Endpoint findPendientesAprobacion llamado');
-
-      // Verificar que el servicio está disponible
-      const result = await this.trabajosService.findPendientesAprobacion();
-
-      console.log(
-        '✅ Endpoint findPendientesAprobacion completado exitosamente',
-      );
-      console.log(`📊 Resultado: ${result.length} trabajos encontrados`);
-
-      return result;
-    } catch (error) {
-      console.error('❌ Error en endpoint findPendientesAprobacion:', error);
-      console.error('❌ Stack trace:', error.stack);
-
-      // Retornar array vacío en lugar de lanzar error
-      return [];
-    }
   }
 
   @Get('health')
