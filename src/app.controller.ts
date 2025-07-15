@@ -11,15 +11,6 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Get('status')
-  status(@Res() res: Response) {
-    res.status(200).json({
-      status: 'ok',
-      message: 'Server is running',
-      timestamp: new Date().toISOString(),
-    });
-  }
-
   @Get('health')
   healthCheck(@Res() res: Response) {
     console.log('🔍 Health check endpoint called');
@@ -32,11 +23,11 @@ export class AppController {
     });
   }
 
-  @Get('api')
-  apiHealthCheck(@Res() res: Response) {
+  @Get('status')
+  status(@Res() res: Response) {
     res.status(200).json({
       status: 'ok',
-      message: 'API is running',
+      message: 'Server is running',
       timestamp: new Date().toISOString(),
     });
   }
