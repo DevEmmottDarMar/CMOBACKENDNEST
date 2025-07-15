@@ -13,21 +13,18 @@ export class AppController {
 
   @Get('health')
   healthCheck(@Res() res: Response) {
-    console.log('🔍 Health check endpoint called');
     res.status(200).json({
       status: 'ok',
       timestamp: new Date().toISOString(),
       message: 'Backend is running',
-      version: '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
     });
   }
 
-  @Get('status')
-  status(@Res() res: Response) {
+  @Get('api')
+  apiHealthCheck(@Res() res: Response) {
     res.status(200).json({
       status: 'ok',
-      message: 'Server is running',
+      message: 'API is running',
       timestamp: new Date().toISOString(),
     });
   }
