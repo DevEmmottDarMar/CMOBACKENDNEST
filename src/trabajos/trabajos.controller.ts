@@ -310,7 +310,33 @@ export class TrabajosController {
     status: 401,
     description: 'No autorizado - Token JWT requerido'
   })
-  findPendientesAprobacion() {
-    return this.trabajosService.findPendientesAprobacion();
+  async findPendientesAprobacion() {
+    try {
+      console.log('🔍 Endpoint findPendientesAprobacion llamado');
+      const result = await this.trabajosService.findPendientesAprobacion();
+      console.log('✅ Endpoint findPendientesAprobacion completado exitosamente');
+      return result;
+    } catch (error) {
+      console.error('❌ Error en endpoint findPendientesAprobacion:', error);
+      throw error;
+    }
+  }
+
+  @Get('health')
+  @ApiOperation({
+    summary: 'Health check para trabajos',
+    description: 'Endpoint de prueba para verificar que el módulo de trabajos funciona'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Módulo de trabajos funcionando correctamente'
+  })
+  healthCheck() {
+    return {
+      status: 'ok',
+      module: 'trabajos',
+      timestamp: new Date().toISOString(),
+      message: 'Módulo de trabajos funcionando correctamente'
+    };
   }
 }

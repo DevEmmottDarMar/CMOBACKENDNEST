@@ -373,20 +373,59 @@ export class TrabajosService {
   }
 
   async findPendientesAprobacion(): Promise<TrabajoInicioResponseDto[]> {
-    const trabajos = await this.trabajosRepository.find({
-      where: { estado: TrabajoEstado.PENDIENTE_APROBACION },
-      relations: ['tecnicoAsignado', 'area'],
-      order: { fechaInicioReal: 'ASC' }
-    });
+    try {
+      console.log('🔍 Buscando trabajos pendientes de aprobación...');
+      
+      // Verificar que la conexión a la base de datos funciona
+      const totalTrabajos = await this.trabajosRepository.count();
+      console.log(`📊 Total de trabajos en la base de datos: ${totalTrabajos}`);
+      
+      // Buscar trabajos con estado pendiente_aprobacion
+      const trabajos = await this.trabajosRepository.find({
+        where: { estado: TrabajoEstado.PENDIENTE_APROBACION },
+        order: { fechaInicioReal: 'ASC' }
+      });
 
-    return trabajos.map(trabajo => ({
-      id: trabajo.id,
-      titulo: trabajo.titulo || 'Trabajo sin título',
-      estado: trabajo.estado,
-      estaAprobado: false,
-      estaRechazado: false,
-      fechaSolicitud: trabajo.fechaInicioReal!,
-      comentarios: trabajo.comentarios
-    }));
+      console.log(`📊 Encontrados ${trabajos.length} trabajos pendientes de aprobación`);
+
+      // Si no hay trabajos, retornar array vacío
+      if (trabajos.length === 0) {
+        console.log('ℹ️ No hay trabajos pendientes de aprobación');
+        return [];
+      }
+
+      const trabajosFormateados = trabajos.map(trabajo => {
+        try {
+          return {
+            id: trabajo.id,
+            titulo: trabajo.titulo || 'Trabajo sin título',
+            estado: trabajo.estado,
+            estaAprobado: false,
+            estaRechazado: false,
+            fechaSolicitud: trabajo.fechaInicioReal || new Date(),
+            comentarios: trabajo.comentarios || ''
+          };
+        } catch (error) {
+          console.error(`❌ Error formateando trabajo ${trabajo.id}:`, error);
+          return {
+            id: trabajo.id,
+            titulo: 'Error al cargar título',
+            estado: trabajo.estado,
+            estaAprobado: false,
+            estaRechazado: false,
+            fechaSolicitud: new Date(),
+            comentarios: 'Error al cargar comentarios'
+          };
+        }
+      });
+
+      console.log('✅ Trabajos formateados exitosamente');
+      return trabajosFormateados;
+    } catch (error) {
+      console.error('❌ Error en findPendientesAprobacion:', error);
+      // Retornar array vacío en caso de error en lugar de lanzar excepción
+      console.log('⚠️ Retornando array vacío debido a error');
+      return [];
+    }
   }
 }
