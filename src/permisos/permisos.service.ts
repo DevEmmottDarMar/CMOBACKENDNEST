@@ -388,6 +388,24 @@ export class PermisosService {
     });
     console.log('Permiso actualizado con la imagen');
 
+    // 🔔 ENVIAR NOTIFICACIÓN WEBSOCKET AL SUPERVISOR
+    // Obtener el permiso actualizado con todas las relaciones
+    const permisoActualizado = await this.permisosRepository.findOne({ 
+      where: { id: uploadImageDto.permisoId }, 
+      relations: this.relationsOptions 
+    });
+
+    if (permisoActualizado) {
+      const tecnicoNombre = permisoActualizado.tecnico?.nombre || 'Técnico';
+      const tipoPermisoNombre = permisoActualizado.tipoPermiso?.nombre || 'Permiso';
+      const trabajoNombre = permisoActualizado.trabajo?.titulo || 'Trabajo';
+      
+      const notificationMessage = `📸 ${tecnicoNombre} ha enviado una foto para revisión del permiso ${tipoPermisoNombre} del trabajo "${trabajoNombre}".`;
+      
+      console.log('Enviando notificación WebSocket:', notificationMessage);
+      this.eventsService.sendPermisoNotification(permisoActualizado, 'actualizado', notificationMessage);
+    }
+
     console.log('--- Método uploadImage (fin) ---');
     return url;
   }
