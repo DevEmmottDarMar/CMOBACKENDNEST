@@ -230,6 +230,30 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   /**
+   * Envía una notificación de trabajo a todos los clientes WebSocket conectados.
+   * @param trabajo El objeto del trabajo que se ha iniciado o actualizado.
+   * @param type El tipo de notificación ('iniciado', 'aprobado', 'rechazado').
+   * @param customMessage El mensaje personalizado a enviar.
+   */
+  sendTrabajoNotification(trabajo: any, type: 'iniciado' | 'aprobado' | 'rechazado', customMessage: string) {
+    const message = customMessage;
+    
+    this.logger.log(`🔔 Enviando notificación de trabajo ${type}: ${message}`);
+    this.logger.log(`📋 Detalles del trabajo: ID=${trabajo.id}, Estado=${trabajo.estado}`);
+
+    this.clients.forEach((info) => {
+      if (info.ws.readyState === WebSocket.OPEN) {
+        info.ws.send(JSON.stringify({
+          event: 'trabajoNotification',
+          message: message,
+          trabajo: trabajo,
+          type: type
+        }));
+      }
+    });
+  }
+
+  /**
    * Notifica a todos los clientes cuando un nuevo usuario se conecta.
    * @param user El usuario que se acaba de conectar.
    * @param userRole El rol del usuario.

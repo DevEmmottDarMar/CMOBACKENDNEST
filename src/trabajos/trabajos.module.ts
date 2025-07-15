@@ -7,11 +7,12 @@ import { Trabajo } from './entities/trabajo.entity';
 import { User } from '../users/entities/user.entity';
 import { Area } from '../areas/entities/area.entity';
 import { Role } from '../roles/entities/role.entity';
+import { EventsGateway } from '../events/events.gateway';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Trabajo, User, Area, Role])],
   controllers: [TrabajosController],
-  providers: [TrabajosService],
+  providers: [TrabajosService, EventsGateway],
   // 👇 ¡AÑADE ESTA LÍNEA PARA EXPORTAR EL SERVICIO!
   exports: [TrabajosService],
 })

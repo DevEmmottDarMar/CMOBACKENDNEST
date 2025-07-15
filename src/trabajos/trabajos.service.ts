@@ -18,6 +18,7 @@ import { TrabajoInicioResponseDto } from './dto/trabajo-inicio-response.dto';
 import { AprobarTrabajoDto } from './dto/aprobar-trabajo.dto';
 import { User } from '../users/entities/user.entity';
 import { Area } from '../areas/entities/area.entity';
+import { EventsGateway } from '../events/events.gateway';
 import { Role } from '../roles/entities/role.entity';
 
 @Injectable()
@@ -29,6 +30,7 @@ export class TrabajosService {
     private usersRepository: Repository<User>,
     @InjectRepository(Area)
     private areasRepository: Repository<Area>,
+    private eventsGateway: EventsGateway,
   ) {}
 
   async create(createTrabajoDto: CreateTrabajoDto): Promise<Trabajo> {
@@ -262,7 +264,7 @@ export class TrabajosService {
 
     const trabajoActualizado = await this.trabajosRepository.save(trabajo);
 
-    // TODO: Enviar notificación al supervisor via WebSocket
+    // Enviar notificación al supervisor via WebSocket
     await this.notificarSupervisor(trabajoActualizado);
 
     return {
@@ -308,8 +310,32 @@ export class TrabajosService {
   }
 
   private async notificarSupervisor(trabajo: Trabajo): Promise<void> {
-    // TODO: Implementar notificación real via WebSocket
-    console.log(`🔔 Notificación: Trabajo ${trabajo.id} iniciado por técnico ${trabajo.tecnicoAsignadoId}, pendiente de aprobación`);
+    try {
+      const tecnico = await this.usersRepository.findOne({
+        where: { id: trabajo.tecnicoAsignadoId },
+        relations: ['area']
+      });
+
+      const mensaje = `🚀 Nuevo trabajo iniciado: "${trabajo.titulo}" por ${tecnico?.nombre || 'Técnico'} - Pendiente de aprobación`;
+      
+      this.eventsGateway.sendTrabajoNotification(
+        {
+          id: trabajo.id,
+          titulo: trabajo.titulo,
+          estado: trabajo.estado,
+          tecnicoAsignado: tecnico,
+          area: tecnico?.area,
+          fechaInicioReal: trabajo.fechaInicioReal,
+          comentarios: trabajo.comentarios
+        },
+        'iniciado',
+        mensaje
+      );
+      
+      console.log(`🔔 Notificación WebSocket enviada: Trabajo ${trabajo.id} iniciado`);
+    } catch (error) {
+      console.error('❌ Error enviando notificación WebSocket:', error);
+    }
   }
 
   async aprobarTrabajo(id: string, aprobarTrabajoDto: AprobarTrabajoDto): Promise<TrabajoInicioResponseDto> {
@@ -351,7 +377,7 @@ export class TrabajosService {
 
     const trabajoActualizado = await this.trabajosRepository.save(trabajo);
 
-    // TODO: Enviar notificación al técnico via WebSocket
+    // Enviar notificación al técnico via WebSocket
     await this.notificarTecnico(trabajoActualizado, aprobado);
 
     return {
@@ -367,64 +393,62 @@ export class TrabajosService {
   }
 
   private async notificarTecnico(trabajo: Trabajo, aprobado: boolean): Promise<void> {
-    // TODO: Implementar notificación real via WebSocket
-    const estado = aprobado ? 'APROBADO' : 'RECHAZADO';
-    console.log(`🔔 Notificación: Trabajo ${trabajo.id} ${estado} por supervisor. Técnico: ${trabajo.tecnicoAsignadoId}`);
+    try {
+      const supervisor = await this.usersRepository.findOne({
+        where: { id: trabajo.tecnicoAsignadoId },
+        relations: ['area']
+      });
+
+      const estado = aprobado ? 'APROBADO' : 'RECHAZADO';
+      const mensaje = aprobado 
+        ? `✅ Trabajo "${trabajo.titulo}" ha sido aprobado por el supervisor`
+        : `❌ Trabajo "${trabajo.titulo}" ha sido rechazado por el supervisor`;
+      
+      this.eventsGateway.sendTrabajoNotification(
+        {
+          id: trabajo.id,
+          titulo: trabajo.titulo,
+          estado: trabajo.estado,
+          tecnicoAsignado: supervisor,
+          area: supervisor?.area,
+          fechaInicioReal: trabajo.fechaInicioReal,
+          comentarios: trabajo.comentarios
+        },
+        aprobado ? 'aprobado' : 'rechazado',
+        mensaje
+      );
+      
+      console.log(`🔔 Notificación WebSocket enviada: Trabajo ${trabajo.id} ${estado}`);
+    } catch (error) {
+      console.error('❌ Error enviando notificación WebSocket:', error);
+    }
   }
 
   async findPendientesAprobacion(): Promise<TrabajoInicioResponseDto[]> {
     try {
-      console.log('🔍 Buscando trabajos pendientes de aprobación...');
+      console.log('🔍 Iniciando findPendientesAprobacion...');
       
-      // Verificar que la conexión a la base de datos funciona
-      const totalTrabajos = await this.trabajosRepository.count();
-      console.log(`📊 Total de trabajos en la base de datos: ${totalTrabajos}`);
-      
-      // Buscar trabajos con estado pendiente_aprobacion
+      // Método simplificado para evitar errores
       const trabajos = await this.trabajosRepository.find({
-        where: { estado: TrabajoEstado.PENDIENTE_APROBACION },
+        where: { estado: 'pendiente_aprobacion' },
         order: { fechaInicioReal: 'ASC' }
       });
 
-      console.log(`📊 Encontrados ${trabajos.length} trabajos pendientes de aprobación`);
+      console.log(`📊 Encontrados ${trabajos.length} trabajos`);
 
-      // Si no hay trabajos, retornar array vacío
-      if (trabajos.length === 0) {
-        console.log('ℹ️ No hay trabajos pendientes de aprobación');
-        return [];
-      }
-
-      const trabajosFormateados = trabajos.map(trabajo => {
-        try {
-          return {
-            id: trabajo.id,
-            titulo: trabajo.titulo || 'Trabajo sin título',
-            estado: trabajo.estado,
-            estaAprobado: false,
-            estaRechazado: false,
-            fechaSolicitud: trabajo.fechaInicioReal || new Date(),
-            comentarios: trabajo.comentarios || ''
-          };
-        } catch (error) {
-          console.error(`❌ Error formateando trabajo ${trabajo.id}:`, error);
-          return {
-            id: trabajo.id,
-            titulo: 'Error al cargar título',
-            estado: trabajo.estado,
-            estaAprobado: false,
-            estaRechazado: false,
-            fechaSolicitud: new Date(),
-            comentarios: 'Error al cargar comentarios'
-          };
-        }
-      });
-
-      console.log('✅ Trabajos formateados exitosamente');
-      return trabajosFormateados;
+      return trabajos.map(trabajo => ({
+        id: trabajo.id,
+        titulo: trabajo.titulo || 'Trabajo sin título',
+        estado: trabajo.estado,
+        estaAprobado: false,
+        estaRechazado: false,
+        fechaSolicitud: trabajo.fechaInicioReal || new Date(),
+        comentarios: trabajo.comentarios || ''
+      }));
+      
     } catch (error) {
       console.error('❌ Error en findPendientesAprobacion:', error);
-      // Retornar array vacío en caso de error en lugar de lanzar excepción
-      console.log('⚠️ Retornando array vacío debido a error');
+      console.error('❌ Stack trace:', error.stack);
       return [];
     }
   }
